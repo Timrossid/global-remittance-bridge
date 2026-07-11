@@ -5,6 +5,10 @@ require('dotenv').config();
 const prisma = new PrismaClient();
 const server = new Horizon.Server('https://testnet.stellar.org');
 
+/**
+ * Watches for new payments on a given merchant address.
+ * @param {string} merchantAddress 
+ */
 async function watchTransactions(merchantAddress) {
   console.log(`Watching transactions for: ${merchantAddress}`);
   
@@ -39,6 +43,9 @@ async function watchTransactions(merchantAddress) {
   }
 }
 
+/**
+ * Starts the main indexing loop.
+ */
 async function startIndexer() {
   console.log('Transaction Indexer Started...');
   

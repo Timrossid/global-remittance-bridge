@@ -6,6 +6,9 @@ pub struct EscrowContract;
 
 #[contractimpl]
 impl EscrowContract {
+    /**
+     * Creates a new escrow instance and locks the specified amount of tokens.
+     */
     pub fn create_escrow(env: Env, sender: Address, receiver: Address, token: Address, amount: i128) -> u64 {
         sender.require_auth();
 
@@ -28,6 +31,9 @@ impl EscrowContract {
         escrow_id
     }
 
+    /**
+     * Releases the escrowed funds to the designated receiver.
+     */
     pub fn release_funds(env: Env, admin: Address, escrow_id: u64) {
         admin.require_auth();
 
@@ -49,6 +55,9 @@ impl EscrowContract {
         env.storage().persistent().set(&(escrow_id, symbol_short!("status")), &1u32); // 1 = Released
     }
 
+    /**
+     * Returns the escrowed funds back to the original sender.
+     */
     pub fn refund_funds(env: Env, admin: Address, escrow_id: u64) {
         admin.require_auth();
 

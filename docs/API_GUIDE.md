@@ -79,3 +79,5 @@ The API uses standard HTTP error codes:
 - `403`: Forbidden (Insufficient permissions)
 - `404`: Not Found (Resource does not exist)
 - `500`: Internal Server Error
+
+<!-- End of API Guide -->

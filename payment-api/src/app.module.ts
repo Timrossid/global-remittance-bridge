@@ -11,6 +11,10 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './auth/jwt.strategy';
 
+/**
+ * Root application module for the Payment API.
+ * Orchestrates all core modules and services.
+ */
 @Module({
   imports: [
     HttpModule,

@@ -24,3 +24,5 @@ Moving into Phase 2 (Core Platform) and Phase 3 (Stellar Integration).
 ## 🛠️ Contribution
 
 Documentation is open for improvement. Please create a PR if you find inaccuracies or missing information.
+
+<!-- End of docs/README.md -->

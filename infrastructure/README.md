@@ -29,3 +29,5 @@ Refer to the detailed steps in the `README.md` to set up the production environm
 4.  Deploy frontend services via Vercel.
 5.  Verify system health and connectivity.
 
+<!-- End of infrastructure README -->
+
