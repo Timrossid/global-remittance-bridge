@@ -1,0 +1,12 @@
+diff --git a/node_modules/@stellar/stellar-sdk/lib/cjs/base/signing.js b/node_modules/@stellar/stellar-sdk/lib/cjs/base/signing.js
+index 2a127f9..cd5cabc 100644
+--- a/node_modules/@stellar/stellar-sdk/lib/cjs/base/signing.js
++++ b/node_modules/@stellar/stellar-sdk/lib/cjs/base/signing.js
+@@ -24,6 +24,7 @@ function _interopNamespace(e) {
+ 
+ var ed__namespace = /*#__PURE__*/_interopNamespace(ed);
+ 
++ed__namespace.hashes = ed__namespace.hashes || {};
+ ed__namespace.hashes.sha512 = sha2_js.sha512;
+ function generate(secretKey) {
+   return buffer.Buffer.from(ed__namespace.getPublicKey(secretKey));

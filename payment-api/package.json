@@ -14,7 +14,8 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
-    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r jest node_modules/.bin/jest --runInBand"
+    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r jest node_modules/.bin/jest --runInBand",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@nestjs/axios": "^4.0.1",
@@ -23,7 +24,7 @@
     "@nestjs/jwt": "^10.0.0",
     "@nestjs/passport": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
-    "@noble/hashes": "1.8.0",
+    "@noble/hashes": "2.2.0",
     "@prisma/client": "^5.0.0",
     "@stellar/stellar-sdk": "^16.0.1",
     "axios": "^1.18.1",
@@ -32,6 +33,7 @@
     "class-validator": "^0.14.0",
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.0",
+    "patch-package": "^8.0.1",
     "redis": "^4.6.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.0",
@@ -55,10 +57,9 @@
     "typescript": "^5.1.0"
   },
   "overrides": {
-    "@noble/hashes": "1.8.0"
+    "@noble/ed25519": "1.3.0"
   },
   "resolutions": {
-    "@noble/hashes": "1.8.0"
+    "@noble/ed25519": "1.3.0"
   }
 }
-
