@@ -6,29 +6,34 @@ WORKDIR /app
 # Install build dependencies
 RUN apk add --no-cache libc6-compat
 
-COPY package*.json ./
+# Copy the entire monorepo to allow for cross-package imports
+COPY . .
+
+# Install dependencies for the entire workspace
 RUN npm install
 
 # Copy prisma schema and generate client
-COPY prisma ./prisma/
-RUN npx prisma generate
+RUN npx prisma generate --schema=payment-api/prisma/schema.prisma
 
-COPY . .
-RUN npm run build
+# Build the payment-api
+RUN cd payment-api && npm run build
 
 # Production Stage
 FROM node:18-alpine
 
 WORKDIR /app
 
-# Install only production dependencies
-COPY package*.json ./
-RUN npm install --only=production
+# Copy only the necessary files for production from the builder stage
+COPY --from=builder /app/payment-api/package*.json ./payment-api/
+COPY --from=builder /app/payment-api/dist ./payment-api/dist
+COPY --from=builder /app/payment-api/prisma ./payment-api/prisma
+COPY --from=builder /app/node_modules ./node_modules
 
-# Copy built assets from builder stage
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma/client ./node_modules/@prisma/client
+# Generate prisma client in the production stage
+RUN cd payment-api && npx prisma generate --schema=prisma/schema.prisma
 
-EXPOSE 3000
+# Set workdir to the api folder for execution
+WORKDIR /app/payment-api
+
+EXPOSE 3001
 CMD ["npm", "run", "start:prod"]
