@@ -10,6 +10,12 @@ The Global Micro-Remittance Bridge is an open-source infrastructure designed to 
 - **Scalable API:** Robust backend orchestration for high-volume transactions.
 - **Developer SDK:** Easy integration for any merchant platform.
 
+## 🔗 Quick Links
+
+- **Live Demo:** [https://demo.global-remittance-bridge.example.com](https://demo.global-remittance-bridge.example.com) (Placeholder)
+- **Documentation:** [https://docs.global-remittance-bridge.example.com](https://docs.global-remittance-bridge.example.com) (Placeholder)
+- **API Reference:** [https://api.global-remittance-bridge.example.com](https://api.global-remittance-bridge.example.com) (Placeholder)
+
 ## 📂 Repository Structure
 
 The project is organized as a monorepo containing the following core components:
