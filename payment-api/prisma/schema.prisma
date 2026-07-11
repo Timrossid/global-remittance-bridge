@@ -1,0 +1,130 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum SettlementStatus {
+  PENDING
+  PROCESSED
+  FAILED
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  role      String   @default("USER")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Merchant {
+  id            String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  walletAddress String   @unique
+  kycStatus     String   @default("PENDING")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  transactions  Transaction[]
+  settlements   Settlement[]
+  apiKeys       ApiKey[]
+}
+
+model Customer {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  walletAddress String   @unique
+  kycStatus     String   @default("PENDING")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  transactions  Transaction[]
+}
+
+model Transaction {
+  id              String            @id @default(uuid())
+  amount          Decimal
+  currency        String
+  senderId        String
+  receiverId      String
+  status          TransactionStatus @default(PENDING)
+  stellarTxHash   String?           @unique
+  merchantId      String
+  customerId      String
+  merchant       Merchant          @relation(fields: [merchantId], references: [id])
+  customer       Customer          @relation(fields: [customerId], references: [id])
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+}
+
+model Settlement {
+  id          String            @id @default(uuid())
+  amount      Decimal
+  currency    String
+  status      SettlementStatus  @default(PENDING)
+  merchantId  String
+  merchant    Merchant          @relation(fields: [merchantId], references: [id])
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
+
+model ApiKey {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  merchantId String
+  merchant  Merchant @relation(fields: [merchantId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model ExchangeRate {
+  id        String   @id @default(uuid())
+  pair      String   @unique // e.g., "USD_XLM"
+  rate      Decimal
+  updatedAt DateTime @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  action    String
+  userId    String?
+  details   Json
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model KycDocument {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String
+  url       String
+  status    String   @default("PENDING")
+  createdAt DateTime @default(now())
+}
+
+model Webhook {
+  id        String   @id @default(uuid())
+  url       String
+  events    String[]
+  merchantId String
+  secret    String
+  createdAt DateTime @default(now())
+}
