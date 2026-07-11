@@ -9,11 +9,11 @@ RUN apk add --no-cache libc6-compat
 # Copy the entire monorepo to allow for cross-package imports
 COPY . .
 
-# Install dependencies for the entire workspace
-RUN npm install
+# Install dependencies specifically for the payment-api
+RUN cd payment-api && npm install
 
 # Copy prisma schema and generate client
-RUN npx prisma generate --schema=payment-api/prisma/schema.prisma
+RUN cd payment-api && npx prisma generate --schema=prisma/schema.prisma
 
 # Build the payment-api
 RUN cd payment-api && npm run build
