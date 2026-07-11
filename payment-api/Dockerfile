@@ -27,7 +27,7 @@ WORKDIR /app
 COPY --from=builder /app/payment-api/package*.json ./payment-api/
 COPY --from=builder /app/payment-api/dist ./payment-api/dist
 COPY --from=builder /app/payment-api/prisma ./payment-api/prisma
-COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/payment-api/node_modules ./payment-api/node_modules
 
 # Generate prisma client in the production stage
 RUN cd payment-api && npx prisma generate --schema=prisma/schema.prisma
