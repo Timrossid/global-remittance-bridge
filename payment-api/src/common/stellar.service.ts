@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import StellarSdk from '@stellar/stellar-sdk';
+import * as StellarSdk from '@stellar/stellar-sdk';
 
 @Injectable()
 export class StellarService {
