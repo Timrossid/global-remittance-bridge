@@ -12,7 +12,7 @@ The Global Micro-Remittance Bridge is an open-source infrastructure designed to 
 
 ## 🔗 Quick Links
 
-- **Live Demo:** [https://demo.global-remittance-bridge.example.com](https://demo.global-remittance-bridge.example.com) (Placeholder)
+- **Live Demo:** [https://merchant-dashboard-rosy.vercel.app](https://merchant-dashboard-rosy.vercel.app)
 - **Documentation:** [https://docs.global-remittance-bridge.example.com](https://docs.global-remittance-bridge.example.com) (Placeholder)
 - **API Reference:** [https://api.global-remittance-bridge.example.com](https://api.global-remittance-bridge.example.com) (Placeholder)
 
