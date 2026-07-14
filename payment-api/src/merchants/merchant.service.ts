@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../common/prisma.service';
 import { Prisma } from '@prisma/client';
 
@@ -11,7 +11,9 @@ export class MerchantService {
   }
 
   async getMerchantById(id: string) {
-    return this.prisma.merchant.findUnique({ where: { id } });
+    const merchant = await this.prisma.merchant.findUnique({ where: { id } });
+    if (!merchant) throw new NotFoundException('Merchant not found');
+    return merchant;
   }
 
   async updateKycStatus(id: string, status: string) {
@@ -27,15 +29,38 @@ export class MerchantService {
     });
 
     const totalVolume = transactions.reduce((acc, tx) => acc + Number(tx.amount), 0);
-    const pendingSettlements = transactions.filter(tx => tx.status === 'PENDING').length;
+    const pendingSettlements = transactions.filter((tx) => tx.status === 'PENDING').length;
+    const completedCount = transactions.filter((tx) => tx.status === 'COMPLETED').length;
+
     const activeCustomers = await this.prisma.customer.count({
-      where: { transactions: { some: { merchantId } } }
+      where: { transactions: { some: { merchantId } } },
     });
 
     return {
       totalVolume,
       pendingSettlements,
+      completedCount,
       activeCustomers,
+      totalTransactions: transactions.length,
     };
+  }
+
+  async getTransactions(merchantId: string) {
+    return this.prisma.transaction.findMany({
+      where: { merchantId },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+      select: {
+        id: true,
+        amount: true,
+        currency: true,
+        status: true,
+        stellarTxHash: true,
+        senderId: true,
+        receiverId: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
   }
 }
