@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: global-remittance-api
+    runtime: node
+    region: oregon
+    plan: free
+    rootDir: payment-api
+    buildCommand: npm ci && npx prisma generate && npm run build
+    startCommand: npx prisma migrate deploy && node dist/payment-api/src/main.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: STELLAR_NETWORK
+        value: testnet
+      - key: SOROBAN_RPC_URL
+        value: https://soroban-testnet.stellar.org
+      - key: SOROBAN_CONTRACT_ID
+        value: CBL3I4IDMIUZJEJG56DV2VP6K7L2ROLT3JYCC53KNU7PPUX6DGPJJVKC
+      # Set these as secret env vars in the Render dashboard:
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: STELLAR_SECRET
+        sync: false
+      - key: REDIS_URL
+        sync: false

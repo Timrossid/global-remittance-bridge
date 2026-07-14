@@ -1,39 +1,41 @@
-# Build Stage
+# ── Build stage ────────────────────────────────────────────────────────────────
 FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Install build dependencies
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat openssl
 
-# Copy the entire monorepo to allow for cross-package imports
+# Copy the full monorepo so cross-package imports (anchor-adapter) resolve
 COPY . .
 
-# Install dependencies specifically for the payment-api
-RUN cd payment-api && npm install
-
-# Copy prisma schema and generate client
-RUN cd payment-api && npx prisma generate --schema=prisma/schema.prisma
-
-# Build the payment-api
-RUN cd payment-api && npm run build
-
-# Production Stage
-FROM node:18-alpine
-
-WORKDIR /app
-
-# Copy only the necessary files for production from the builder stage
-COPY --from=builder /app/payment-api/package*.json ./payment-api/
-COPY --from=builder /app/payment-api/dist ./payment-api/dist
-COPY --from=builder /app/payment-api/prisma ./payment-api/prisma
-COPY --from=builder /app/payment-api/node_modules ./payment-api/node_modules
-
-# Generate prisma client in the production stage
-RUN cd payment-api && npx prisma generate --schema=prisma/schema.prisma
-
-# Set workdir to the api folder for execution
 WORKDIR /app/payment-api
 
+# Install all deps (including devDeps needed for build)
+RUN npm ci
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Build — output goes to /app/payment-api/dist/payment-api/src/main.js
+RUN npm run build
+
+# ── Production stage ───────────────────────────────────────────────────────────
+FROM node:18-alpine AS runner
+
+WORKDIR /app/payment-api
+
+RUN apk add --no-cache libc6-compat openssl
+
+# Copy only what's needed to run
+COPY --from=builder /app/payment-api/package*.json ./
+COPY --from=builder /app/payment-api/dist ./dist
+COPY --from=builder /app/payment-api/prisma ./prisma
+COPY --from=builder /app/payment-api/node_modules ./node_modules
+
+# Re-generate Prisma client for this platform
+RUN npx prisma generate
+
 EXPOSE 3001
-CMD ["npm", "run", "start:prod"]
+
+# Run migrations then start
+CMD npx prisma migrate deploy && node dist/payment-api/src/main.js
