@@ -2,24 +2,55 @@ name: Build
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main, master ]
   pull_request:
-    branches: [ master ]
+    branches: [ main, master ]
 
 jobs:
-  build:
+  build-api:
+    name: Build Payment API
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: payment-api/package-lock.json
 
-    - name: Install dependencies
-      run: npm install
+      - name: Install dependencies
+        working-directory: payment-api
+        run: npm ci
 
-    - name: Build project
-      run: npm run build
+      - name: Build
+        working-directory: payment-api
+        run: npm run build
+
+  build-dashboard:
+    name: Build Merchant Dashboard
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: merchant-dashboard/package-lock.json
+
+      - name: Install dependencies
+        working-directory: merchant-dashboard
+        run: npm ci
+
+      - name: Build
+        working-directory: merchant-dashboard
+        env:
+          NEXT_PUBLIC_API_URL: 'http://localhost:3001'
+          NEXT_PUBLIC_NETWORK: 'testnet'
+          NEXT_PUBLIC_CONTRACT_ID: 'CCPLACEHOLDER'
+        run: npm run build

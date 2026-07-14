@@ -1,25 +1,52 @@
-name: Linting
+name: Lint
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main, master ]
   pull_request:
-    branches: [ master ]
+    branches: [ main, master ]
 
 jobs:
-  lint:
+  lint-api:
+    name: Lint Payment API
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
+      - uses: actions/checkout@v3
 
-    - name: Install dependencies
-      run: npm install
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: payment-api/package-lock.json
 
-    - name: Run lint
-      run: npm run lint
+      - name: Install dependencies
+        working-directory: payment-api
+        run: npm ci
+
+      - name: Lint
+        working-directory: payment-api
+        run: npm run lint
+
+  lint-dashboard:
+    name: Lint Merchant Dashboard
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: merchant-dashboard/package-lock.json
+
+      - name: Install dependencies
+        working-directory: merchant-dashboard
+        run: npm ci
+
+      - name: Lint
+        working-directory: merchant-dashboard
+        run: npm run lint

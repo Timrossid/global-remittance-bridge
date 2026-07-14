@@ -1,83 +1,167 @@
 # API Guide
 
-This guide provides an overview of the Payment API, which is the primary interface for interacting with the Global Micro-Remittance Bridge.
+The Payment API is a NestJS REST service that powers the Global Micro-Remittance Bridge.
 
-## 🚦 API Overview
+**Base URL (local):** `http://localhost:3001`  
+**Base URL (production):** Set via `NEXT_PUBLIC_API_URL` environment variable
 
-The Payment API is a RESTful service built with NestJS. It uses JWT for authentication and follows standard HTTP status codes.
+All protected endpoints require:
+```http
+Authorization: Bearer <jwt_token>
+```
 
-**Base URL:** `https://api.global-remittance-bridge.example.com` (Production)
+---
 
-## 🔑 Authentication
+## Authentication
 
-All protected endpoints require a valid JSON Web Token (JWT) in the `Authorization` header.
+### Register a new merchant
 
 ```http
-Authorization: Bearer <your_jwt_token>
-```
+POST /auth/register
+Content-Type: application/json
 
-## 🗺️ Endpoint Summary
-
-### 1. Merchant Management
-
-| Endpoint | Method | Description |
-| :--- | :--- | :--- |
-| `/merchants` | `POST` | Onboard a new merchant. |
-| `/merchants/{id}` | `GET` | Retrieve merchant profile details. |
-| `/merchants/{id}/kyc` | `POST` | Submit KYC documentation. |
-
-### 2. Payments
-
-| Endpoint | Method | Description |
-| :--- | :--- | :--- |
-| `/payments` | `POST` | Create a new payment request. |
-| `/payments/{id}` | `GET` | Retrieve transaction status and details. |
-| `/payments/{id}/cancel` | `POST` | Cancel a pending payment. |
-
-### 3. Treasury & Settlements
-
-| Endpoint | Method | Description |
-| :--- | :--- | :--- |
-| `/treasury/balance` | `GET` | Check current bridge treasury balance. |
-| `/settlements` | `GET` | List pending and completed settlements. |
-
-## 📦 Request/Response Formats
-
-All requests and responses use JSON.
-
-### Example: Create Payment
-
-**Request:** `POST /payments`
-
-```json
 {
-  "amount": 150.00,
-  "currency": "USD",
-  "recipient_address": "SD...XYZ",
-  "memo": "INV-12345"
+  "name": "Acme Corp",
+  "email": "merchant@acme.com",
+  "password": "securepass123",
+  "walletAddress": "GABC..."
 }
 ```
 
-**Response:** `201 Created`
-
+Response `201`:
 ```json
 {
-  "id": "pay_abc123",
-  "status": "PENDING",
-  "created_at": "2026-07-11T10:00:00Z",
-  "transaction_hash": null
+  "access_token": "eyJ...",
+  "merchant_id": "uuid",
+  "merchant": { "id": "...", "name": "Acme Corp", "email": "...", "walletAddress": "G..." }
 }
 ```
 
-## ⚠️ Error Handling
+### Login
 
-The API uses standard HTTP error codes:
+```http
+POST /auth/login
+Content-Type: application/json
 
-- `200/201`: Success
-- `400`: Bad Request (Invalid parameters)
-- `401`: Unauthorized (Invalid or missing JWT)
-- `403`: Forbidden (Insufficient permissions)
-- `404`: Not Found (Resource does not exist)
-- `500`: Internal Server Error
+{ "email": "merchant@acme.com", "password": "securepass123" }
+```
 
-<!-- End of API Guide -->
+Response `200`:
+```json
+{ "access_token": "eyJ...", "merchant": { ... } }
+```
+
+---
+
+## Merchant
+
+### Get profile
+```http
+GET /merchants/me
+Authorization: Bearer <token>
+```
+
+### Get dashboard stats
+```http
+GET /merchants/me/stats
+Authorization: Bearer <token>
+```
+
+Response:
+```json
+{
+  "totalVolume": 4500.00,
+  "pendingSettlements": 2,
+  "completedCount": 18,
+  "activeCustomers": 7,
+  "totalTransactions": 20
+}
+```
+
+### Get transaction history
+```http
+GET /merchants/me/transactions
+Authorization: Bearer <token>
+```
+
+---
+
+## Payments
+
+### Create a payment record
+```http
+POST /payments/create
+Content-Type: application/json
+
+{
+  "amount": 100.00,
+  "currency": "USDC",
+  "merchantId": "uuid",
+  "customerId": "uuid"
+}
+```
+
+### Initiate a Stellar transfer (server-signed)
+```http
+POST /payments/transfer
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{ "amount": 50.00, "asset": "XLM" }
+```
+
+### Create a Soroban escrow payment
+```http
+POST /payments/escrow
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "senderAddress": "G...",
+  "tokenAddress": "C...",
+  "amount": 10000000
+}
+```
+
+### Get a payment
+```http
+GET /payments/:id
+```
+
+### Update payment status
+```http
+PUT /payments/:id/status
+Content-Type: application/json
+
+{ "status": "COMPLETED" }
+```
+
+---
+
+## Anchors (Fiat On/Off-Ramp)
+
+### Get a conversion quote
+```http
+GET /anchors/quote?from=USD&to=USDC&amount=100
+```
+
+### Initiate a deposit
+```http
+POST /anchors/deposit
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{ "anchor": "CIRCLE", "amount": 100, "asset": "USDC", "userId": "uuid" }
+```
+
+---
+
+## Error Codes
+
+| Code | Meaning |
+|---|---|
+| `400` | Bad Request — missing or invalid fields |
+| `401` | Unauthorized — missing or expired JWT |
+| `404` | Not Found — resource does not exist |
+| `409` | Conflict — email or wallet already registered |
+| `500` | Internal Server Error |

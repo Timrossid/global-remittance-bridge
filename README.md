@@ -1,48 +1,294 @@
 # 🌎 Global Micro-Remittance Bridge
 
-The Global Micro-Remittance Bridge is an open-source infrastructure designed to enable Small and Medium Enterprises (SMEs) to receive affordable, instant international payments. By leveraging the Stellar network and Soroban smart contracts, we eliminate traditional banking friction and high fees.
+An open-source infrastructure enabling Small and Medium Enterprises (SMEs) to receive affordable, instant international payments via the **Stellar network** and **Soroban smart contracts**. No bank account required.
+
+## 🔗 Live Links
+
+| Resource | URL |
+|---|---|
+| **Live Demo** | [https://merchant-dashboard-rosy.vercel.app](https://merchant-dashboard-rosy.vercel.app) |
+| **GitHub Repo** | [https://github.com/Timrossid/global-remittance-bridge](https://github.com/Timrossid/global-remittance-bridge) |
+| **Stellar Testnet Explorer** | [https://stellar.expert/explorer/testnet](https://stellar.expert/explorer/testnet) |
+| **Escrow Contract** | [CBL3I4IDMIUZJEJG56DV2VP6K7L2ROLT3JYCC53KNU7PPUX6DGPJJVKC](https://stellar.expert/explorer/testnet/contract/CBL3I4IDMIUZJEJG56DV2VP6K7L2ROLT3JYCC53KNU7PPUX6DGPJJVKC) |
+| **Settlement Contract** | [CBBH6JHHNKAC4E444EIYG3HGNPYLVFLY72OMRYCCLFZU4ASVU3AO73QR](https://stellar.expert/explorer/testnet/contract/CBBH6JHHNKAC4E444EIYG3HGNPYLVFLY72OMRYCCLFZU4ASVU3AO73QR) |
+
+---
 
 ## 🚀 Key Features
 
-- **Trustless Escrow:** Secure fund holding using Soroban smart contracts.
-- **Real-time Settlement:** Automated payouts to merchants via Stellar.
-- **Merchant Dashboard:** Comprehensive management portal for SMEs.
-- **Scalable API:** Robust backend orchestration for high-volume transactions.
-- **Developer SDK:** Easy integration for any merchant platform.
+- **Trustless Escrow** — Soroban smart contract holds funds until confirmed delivery; 0.5% protocol fee distributed automatically.
+- **Real-time Settlement** — Automated payouts to merchants via Stellar Horizon API.
+- **Merchant Dashboard** — Production Next.js portal with auth, transaction history, wallet view, settings, and user feedback collection.
+- **REST API** — NestJS backend with JWT authentication, Prisma ORM, and full CRUD for merchants and transactions.
+- **Analytics** — Vercel Analytics integrated for page-view and engagement tracking.
+- **Responsive UI** — Mobile-first Tailwind CSS design, tested on 375px–1440px viewports.
 
-## 🔗 Quick Links
-
-- **Live Demo:** [https://merchant-dashboard-rosy.vercel.app](https://merchant-dashboard-rosy.vercel.app)
-- **Documentation:** [https://docs.global-remittance-bridge.example.com](https://docs.global-remittance-bridge.example.com) (Placeholder)
-- **API Reference:** [https://api.global-remittance-bridge.example.com](https://api.global-remittance-bridge.example.com) (Placeholder)
+---
 
 ## 📂 Repository Structure
 
-The project is organized as a monorepo containing the following core components:
+```
+global-remittance-bridge/
+├── contracts/
+│   ├── escrow/          # Soroban escrow contract (Rust) — creates/releases/refunds escrows
+│   └── settlement/      # Soroban settlement contract (Rust) — processes payouts with fee distribution
+├── payment-api/         # NestJS REST API — auth, merchants, payments, Stellar integration
+├── merchant-dashboard/  # Next.js 14 merchant portal — dashboard, transactions, wallet, settings
+├── transaction-indexer/ # Stellar event monitor and DB synchronizer
+├── anchor-adapter/      # Fiat on/off-ramp integration layer
+├── notification-service/# Email/SMS/webhook notification engine
+├── sdk/                 # Developer SDK for merchant integrations
+├── website/             # Marketing and docs site
+├── infrastructure/      # Docker Compose and deployment configs
+├── docs/                # Architecture, API guide, deployment docs
+├── screenshots/         # Submission screenshots
+└── demo-app/            # Reference merchant implementation
+```
 
-- [`contracts/`](contracts/): Soroban smart contracts for escrow and settlement.
-- [`payment-api/`](payment-api/): Core backend orchestration and business logic.
-- [`merchant-dashboard/`](merchant-dashboard/): Frontend portal for SME users.
-- [`transaction-indexer/`](transaction-indexer/): Blockchain event monitor and synchronizer.
-- [`sdk/`](sdk/): Developer tools and libraries.
-- [`website/`](website/): Marketing and developer documentation site.
-- [`infrastructure/`](infrastructure/): DevOps and deployment configurations.
-- [`docs/`](docs/): Detailed technical and business documentation.
-- [`demo-app/`](demo-app/): Reference implementation for merchants.
-- [`anchor-adapter/`](anchor-adapter/): Integration layer for fiat on/off ramps.
-- [`notification-service/`](notification-service/): Multi-channel notification engine.
+---
 
 ## 🛠️ Tech Stack
 
-- **Blockchain:** Stellar Network (Soroban Smart Contracts)
-- **Backend:** NestJS, Node.js, TypeScript, PostgreSQL, Redis
-- **Frontend:** Next.js, Tailwind CSS, TypeScript
-- **DevOps:** Docker, GitHub Actions, Terraform
+| Layer | Technology |
+|---|---|
+| Blockchain | Stellar Network + Soroban Smart Contracts (Rust) |
+| Backend | NestJS, TypeScript, PostgreSQL (Supabase), Prisma ORM, Redis, BullMQ |
+| Frontend | Next.js 14, Tailwind CSS, TypeScript, Vercel Analytics |
+| Auth | JWT (passport-jwt), salted HMAC-SHA256 passwords |
+| DevOps | Docker, GitHub Actions, Vercel (frontend), Railway/Render (API) |
+
+---
+
+## ⚡ Quick Start
+
+### Prerequisites
+
+- Node.js 18+
+- Rust + `stellar` CLI (`cargo install stellar-cli`)
+- PostgreSQL (or a free [Supabase](https://supabase.com) project)
+- Redis (or [Upstash](https://upstash.com) free tier)
+
+### 1. Clone the repo
+
+```bash
+git clone https://github.com/Timrossid/global-remittance-bridge.git
+cd global-remittance-bridge
+```
+
+### 2. Deploy the Soroban contracts to testnet
+
+```bash
+cd contracts
+
+# Fund a testnet account (do this once)
+stellar keys generate --global deployer --network testnet
+stellar keys fund deployer --network testnet
+
+# Build the escrow contract
+cd escrow
+stellar contract build
+
+# Deploy the escrow contract
+stellar contract deploy \
+  --wasm target/wasm32-unknown-unknown/release/escrow.wasm \
+  --source deployer \
+  --network testnet
+# → Copy the returned contract address (C...) — you'll need it below
+
+# Build and deploy the settlement contract
+cd ../settlement
+stellar contract build
+stellar contract deploy \
+  --wasm target/wasm32-unknown-unknown/release/settlement.wasm \
+  --source deployer \
+  --network testnet
+# → Copy this contract address too
+```
+
+### 3. Set up the Payment API
+
+```bash
+cd ../../payment-api
+cp .env.example .env
+# Edit .env: fill in DATABASE_URL, DIRECT_URL, JWT_SECRET, STELLAR_SECRET, SOROBAN_CONTRACT_ID
+
+npm install
+npx prisma migrate deploy
+npm run start:dev
+# API will be running at http://localhost:3001
+```
+
+### 4. Set up the Merchant Dashboard
+
+```bash
+cd ../merchant-dashboard
+cp .env.example .env.local
+# Edit .env.local: set NEXT_PUBLIC_API_URL=http://localhost:3001
+#                  set NEXT_PUBLIC_CONTRACT_ID=<your C... address>
+
+npm install
+npm run dev
+# Dashboard at http://localhost:3000
+```
+
+---
+
+## 🔑 API Reference
+
+### Authentication
+
+```http
+POST /auth/register
+Content-Type: application/json
+
+{
+  "name": "Acme Corp",
+  "email": "merchant@acme.com",
+  "password": "securepass123",
+  "walletAddress": "GABC..."
+}
+→ { "access_token": "eyJ...", "merchant_id": "uuid", "merchant": {...} }
+```
+
+```http
+POST /auth/login
+Content-Type: application/json
+
+{ "email": "merchant@acme.com", "password": "securepass123" }
+→ { "access_token": "eyJ...", "merchant": {...} }
+```
+
+### Merchant
+
+```http
+GET /merchants/me                    # Get authenticated merchant profile
+GET /merchants/me/stats              # Get dashboard stats
+GET /merchants/me/transactions       # Get transaction history
+```
+
+### Payments
+
+```http
+POST /payments/transfer              # Initiate a direct Stellar payment
+POST /payments/create                # Create a payment record
+GET  /payments/:id                   # Get a single payment
+PUT  /payments/:id/status            # Update payment status
+```
+
+All protected endpoints require `Authorization: Bearer <token>`.
+
+---
+
+## 📜 Smart Contract Details
+
+### Escrow Contract (`contracts/escrow`)
+
+```rust
+// Create a new escrow — locks tokens until released or refunded
+create_escrow(sender, receiver, token, amount) -> escrow_id
+
+// Release funds to receiver (admin only)
+release_funds(admin, escrow_id)
+
+// Refund to original sender (admin only)
+refund_funds(admin, escrow_id)
+```
+
+**State machine:** `PENDING (0)` → `RELEASED (1)` or `REFUNDED (2)`
+
+### Settlement Contract (`contracts/settlement`)
+
+```rust
+// Process a settlement: transfers net amount to merchant, fee to treasury
+// Fee rate: 50 bps (0.5%)
+process_settlement(sender, merchant, treasury, token, amount)
+
+// Distribute accumulated protocol fees to treasury
+distribute_fees(admin, treasury, token, fee_amount)
+
+// View helpers
+get_last_settlement() -> (amount, net, fee)
+get_fee_bps() -> i128
+```
+
+---
+
+## 🏗️ Architecture
+
+```
+Customer Browser / SDK
+        │
+        ▼
+Payment API (NestJS) ─────────── Soroban RPC (testnet)
+        │                                │
+        ├─ auth (JWT)                    │
+        ├─ merchants                     ▼
+        ├─ payments ─────────── Escrow Contract
+        └─ notifications         Settlement Contract
+        │
+        ▼
+PostgreSQL (Supabase) ◄─── Transaction Indexer
+                                    │
+                            Stellar Horizon API
+```
+
+---
+
+## 🚢 Deployment
+
+### Frontend (Vercel)
+
+1. Import repo to Vercel
+2. Set environment variables:
+   - `NEXT_PUBLIC_API_URL` → your deployed API URL
+   - `NEXT_PUBLIC_CONTRACT_ID` → deployed escrow contract C-address
+   - `NEXT_PUBLIC_NETWORK` → `testnet`
+3. Deploy — Vercel Analytics auto-activates
+
+### Backend API (Railway / Render)
+
+1. Connect your GitHub repo
+2. Set all variables from `payment-api/.env.example`
+3. Build command: `npm run build`
+4. Start command: `npm run start:prod`
+5. Run migrations: `npx prisma migrate deploy`
+
+---
+
+## 📊 Analytics & Monitoring
+
+- **Vercel Analytics** — Integrated in the merchant dashboard (`@vercel/analytics`). Tracks page views, unique visitors, and navigation patterns automatically on Vercel deployments.
+- **GitHub Actions** — CI runs lint, build, and tests on every push/PR.
+- **Stellar Expert** — All on-chain transactions are publicly visible at `https://stellar.expert/explorer/testnet`.
+
+---
+
+## 🤝 User Onboarding
+
+Users can register at the live demo URL, connect their Stellar wallet address, and start receiving payments immediately on testnet.
+
+For proof of wallet interactions, see the [screenshots/](screenshots/) directory and the Stellar testnet contract explorer.
+
+---
+
+## 📸 Screenshots
+
+See the [screenshots/](screenshots/) directory for:
+- Dashboard UI (desktop)
+- Mobile responsive view
+- Transactions page
+- Vercel Analytics dashboard
+- Deployed contract on Stellar Expert
+- Proof of 10+ wallet interactions
+
+---
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+---
 
 ## 📄 License
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+Apache License 2.0 — see [LICENSE](LICENSE).
