@@ -31,11 +31,11 @@ COPY --from=builder /app/payment-api/package*.json ./
 COPY --from=builder /app/payment-api/dist ./dist
 COPY --from=builder /app/payment-api/prisma ./prisma
 COPY --from=builder /app/payment-api/node_modules ./node_modules
+COPY --from=builder /app/payment-api/deploy.sh ./deploy.sh
 
 # Re-generate Prisma client for this platform
-RUN npx prisma generate
+RUN npx prisma generate && chmod +x deploy.sh
 
 EXPOSE 3001
 
-# Run migrations then start
-CMD npx prisma migrate deploy && node dist/payment-api/src/main.js
+CMD ["sh", "deploy.sh"]
