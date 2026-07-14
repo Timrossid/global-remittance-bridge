@@ -1,27 +1,25 @@
 #!/bin/sh
-# deploy.sh — run before starting the API in production
-# Handles two cases:
-#   1. Fresh database (no tables): migrate deploy creates everything
-#   2. Existing database (P3005 baseline error): resolve the initial migration
-#      as already applied, then deploy any future ones
+# deploy.sh — handles both fresh and existing (Supabase) databases
+# P3005 means the DB has tables but no _prisma_migrations history (baseline needed)
 
+echo "==> Running database migrations..."
+
+# Temporarily allow failures so we can inspect the exit code
+set +e
+npx prisma migrate deploy
+MIGRATE_EXIT=$?
 set -e
 
-echo "Running Prisma migrations..."
-
-# Try a normal migrate deploy first
-if npx prisma migrate deploy; then
-  echo "Migrations applied successfully."
+if [ $MIGRATE_EXIT -eq 0 ]; then
+  echo "==> Migrations applied successfully."
 else
-  EXIT_CODE=$?
-  echo "migrate deploy failed (exit $EXIT_CODE) — attempting baseline..."
-
-  # Mark the initial migration as already applied without running the SQL
+  echo "==> migrate deploy failed (exit $MIGRATE_EXIT) — baselining existing database..."
+  # Mark the initial migration as already applied without re-running the SQL
   npx prisma migrate resolve --applied 0001_initial
-
-  echo "Baseline applied. Running migrate deploy again..."
+  echo "==> Baseline recorded. Re-running migrate deploy..."
   npx prisma migrate deploy
+  echo "==> Migrations complete."
 fi
 
-echo "Starting server..."
+echo "==> Starting server..."
 exec node dist/payment-api/src/main.js
