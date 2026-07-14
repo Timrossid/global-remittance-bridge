@@ -7,6 +7,7 @@ An open-source infrastructure enabling Small and Medium Enterprises (SMEs) to re
 | Resource | URL |
 |---|---|
 | **Live Demo** | [https://merchant-dashboard-rosy.vercel.app](https://merchant-dashboard-rosy.vercel.app) |
+| **Payment API** | [https://global-remittance-api.onrender.com](https://global-remittance-api.onrender.com) |
 | **GitHub Repo** | [https://github.com/Timrossid/global-remittance-bridge](https://github.com/Timrossid/global-remittance-bridge) |
 | **Stellar Testnet Explorer** | [https://stellar.expert/explorer/testnet](https://stellar.expert/explorer/testnet) |
 | **Escrow Contract** | [CBL3I4IDMIUZJEJG56DV2VP6K7L2ROLT3JYCC53KNU7PPUX6DGPJJVKC](https://stellar.expert/explorer/testnet/contract/CBL3I4IDMIUZJEJG56DV2VP6K7L2ROLT3JYCC53KNU7PPUX6DGPJJVKC) |

@@ -3,7 +3,7 @@
 The Payment API is a NestJS REST service that powers the Global Micro-Remittance Bridge.
 
 **Base URL (local):** `http://localhost:3001`  
-**Base URL (production):** Set via `NEXT_PUBLIC_API_URL` environment variable
+**Base URL (production):** `https://global-remittance-api.onrender.com`
 
 All protected endpoints require:
 ```http
