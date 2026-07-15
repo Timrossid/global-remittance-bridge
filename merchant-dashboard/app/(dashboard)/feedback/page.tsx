@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 
-const FEEDBACK_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSd_placeholder_replace_with_real_form/viewform';
+const FEEDBACK_FORM_URL = process.env.NEXT_PUBLIC_FEEDBACK_FORM_URL?.trim();
 
 const ratingOptions = [1, 2, 3, 4, 5];
 
@@ -146,14 +146,20 @@ export default function FeedbackPage() {
       {/* External form link */}
       <div className="bg-gray-50 border rounded-xl p-4 text-center">
         <p className="text-sm text-gray-500 mb-2">Prefer an external form?</p>
-        <a
-          href={FEEDBACK_FORM_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-indigo-600 hover:underline text-sm font-medium"
-        >
-          Fill out our Google Form ↗
-        </a>
+        {FEEDBACK_FORM_URL ? (
+          <a
+            href={FEEDBACK_FORM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-indigo-600 hover:underline text-sm font-medium"
+          >
+            Fill out our Google Form ↗
+          </a>
+        ) : (
+          <p className="text-sm text-gray-500">
+            Set NEXT_PUBLIC_FEEDBACK_FORM_URL in your deployment environment to enable the external form link.
+          </p>
+        )}
       </div>
     </div>
   );

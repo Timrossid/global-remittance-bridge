@@ -83,6 +83,26 @@ export default function DashboardPage() {
       .finally(() => setLoadingTxns(false));
   }, []);
 
+  // Show error state if stats failed to load
+  if (statsError && statsError.includes('Not authenticated')) {
+    return (
+      <div className="p-6 md:p-8 max-w-2xl mx-auto mt-16">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
+          <h2 className="text-lg font-semibold text-blue-900 mb-2">Welcome to Global Remittance Bridge</h2>
+          <p className="text-blue-700 mb-6">Please log in or register to access your merchant dashboard.</p>
+          <div className="flex gap-3 justify-center">
+            <Link href="/login" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm">
+              Sign In
+            </Link>
+            <Link href="/register" className="px-4 py-2 bg-white text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 font-medium text-sm">
+              Register
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
       <div className="mb-8">

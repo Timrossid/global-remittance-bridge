@@ -1,78 +1,25 @@
 # Screenshots
 
-This directory contains screenshots demonstrating the Global Micro-Remittance Bridge in action.
+This directory contains the required submission screenshots for the Global Micro-Remittance Bridge project.
 
-## Required Screenshots (for Level 4 Submission)
+## Required Screenshots
 
-### 1. Product UI (`dashboard.png`)
-Capture the main merchant dashboard showing:
-- Stats cards (Total Volume, Completed Payments, Pending Settlements, Active Customers)
-- Recent transactions table with real transaction data
-- Navigation sidebar
+- `dashboard.png` — main merchant dashboard UI
+- `mobile-view.png` — mobile-responsive dashboard layout
+- `transactions.png` — transactions page showing filters and transaction rows
+- `analytics.png` — analytics or monitoring dashboard view
+- `contract-deployed.png` — deployed Stellar contract page on Stellar Expert
+- `wallet-interactions.png` — proof of 10+ Stellar wallet interactions
 
-**How to capture:** Log in at https://merchant-dashboard-rosy.vercel.app, navigate to the dashboard root `/`.
+## Capture Checklist
 
----
+1. Open the live demo at https://merchant-dashboard-rosy.vercel.app.
+2. Sign in or register and navigate through the dashboard, wallet, and transactions views.
+3. Capture the six images above and save them with the exact filenames listed here.
+4. Replace the placeholder images in this directory with fresh captures if you want a polished submission package.
 
-### 2. Mobile Responsive Design (`mobile-view.png`)
-Demonstrate the responsive mobile layout:
-- Dashboard on a 375px viewport (iPhone-sized)
-- Hamburger menu navigation
-- Stats cards stacked vertically
+## Demo Asset Notes
 
-**How to capture:** Open Chrome DevTools → Toggle Device Toolbar → Select iPhone 12 Pro.
-
----
-
-### 3. Transactions Page (`transactions.png`)
-Show the full transactions list:
-- Filter tabs (All, Completed, Pending, Failed)
-- Transaction rows with Stellar tx hash links to stellar.expert
-- Status badges
-
-**How to capture:** Navigate to `/transactions` after onboarding.
-
----
-
-### 4. Analytics / Monitoring (`analytics.png`)
-Show Vercel Analytics dashboard:
-- Page views over time
-- Unique visitors
-- Top pages
-
-**How to capture:** Log into vercel.com → Your project → Analytics tab.
-
----
-
-### 5. Stellar Testnet Contract (`contract-deployed.png`)
-Show the deployed Soroban escrow contract on Stellar Expert:
-- Contract address
-- Invocation history showing real wallet interactions
-
-**How to capture:** Visit `https://stellar.expert/explorer/testnet/contract/<CONTRACT_ID>`
-
----
-
-### 6. Wallet Interactions (`wallet-interactions.png`)
-Show proof of 10+ wallet interactions on Stellar testnet:
-- Transaction list from Stellar Expert for your contract
-- Each row represents a real user wallet interaction
-
----
-
-## Naming Convention
-
-| Filename | Content |
-|---|---|
-| `dashboard.png` | Main dashboard desktop view |
-| `mobile-view.png` | Dashboard on mobile viewport |
-| `transactions.png` | Transactions list page |
-| `analytics.png` | Vercel Analytics dashboard |
-| `contract-deployed.png` | Stellar Expert contract page |
-| `wallet-interactions.png` | Proof of 10+ wallet interactions |
-| `login.png` | Login page |
-| `register.png` | Registration page |
-
----
-
-*Add your actual screenshots to this directory before submitting.*
+- Use the live demo and the root README for project URLs and contract references.
+- For the wallet interaction proof, collect 10+ Stellar testnet transaction hashes and include them in your submission notes or a supporting document.
+- Record a 2–3 minute walkthrough of the end-to-end payment flow for the demo video.

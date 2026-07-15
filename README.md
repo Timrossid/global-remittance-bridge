@@ -20,6 +20,7 @@ An open-source infrastructure enabling Small and Medium Enterprises (SMEs) to re
 - **Trustless Escrow** — Soroban smart contract holds funds until confirmed delivery; 0.5% protocol fee distributed automatically.
 - **Real-time Settlement** — Automated payouts to merchants via Stellar Horizon API.
 - **Merchant Dashboard** — Production Next.js portal with auth, transaction history, wallet view, settings, and user feedback collection.
+- **Submission Pack** — Screenshots, demo video notes, and feedback collection guidance are now documented in [screenshots/README.md](screenshots/README.md).
 - **REST API** — NestJS backend with JWT authentication, Prisma ORM, and full CRUD for merchants and transactions.
 - **Analytics** — Vercel Analytics integrated for page-view and engagement tracking.
 - **Responsive UI** — Mobile-first Tailwind CSS design, tested on 375px–1440px viewports.
