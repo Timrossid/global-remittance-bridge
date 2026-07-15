@@ -68,8 +68,20 @@ export default function DashboardPage() {
   const [loadingTxns, setLoadingTxns] = useState(true);
   const [statsError, setStatsError] = useState<string | null>(null);
   const [txnsError, setTxnsError] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
+    
+    // Check if user is authenticated before making API calls
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    if (!token) {
+      setStatsError('Not authenticated');
+      setLoadingStats(false);
+      setLoadingTxns(false);
+      return;
+    }
+
     api
       .getStats()
       .then(setStats)
@@ -83,8 +95,8 @@ export default function DashboardPage() {
       .finally(() => setLoadingTxns(false));
   }, []);
 
-  // Show error state if stats failed to load
-  if (statsError && statsError.includes('Not authenticated')) {
+  // Show error state if stats failed to load or user is not authenticated
+  if (!isClient || (statsError && statsError.includes('Not authenticated'))) {
     return (
       <div className="p-6 md:p-8 max-w-2xl mx-auto mt-16">
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
