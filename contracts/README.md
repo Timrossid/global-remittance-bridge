@@ -41,7 +41,7 @@ cargo test
 ### Deployment
 To deploy a contract to the testnet:
 ```bash
-soroban contract deploy --wasm target/wasm32-unknown-unknown/release/escrow.wasm --source <YOUR_ACCOUNT_ID> --network testnet
+soroban contract deploy --wasm target/wasm32-unknown-unknown/release/escrow.wasm --source GXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX --network testnet
 ```
 
 ## 🛡️ Security

@@ -73,7 +73,7 @@ The indexer runs as a standalone Node.js process. Deploy alongside the API (same
 ```bash
 cd transaction-indexer
 npm install
-DATABASE_URL=<your_db_url> STELLAR_NETWORK=testnet node src/index.js
+DATABASE_URL="postgresql://user:password@db-hostname.render.com:6543/dbname?pgbouncer=true" STELLAR_NETWORK=testnet node src/index.js
 ```
 
 Or add it as a second Railway service pointing to `transaction-indexer/`.

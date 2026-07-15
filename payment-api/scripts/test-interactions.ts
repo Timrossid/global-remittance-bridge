@@ -2,9 +2,10 @@ import axios from 'axios';
 
 const API_URL = process.env.API_URL || 'http://localhost:3000';
 
-// In a real test environment, we would use a test user and login to get a real JWT.
-// For this simulation, we'll use a dummy token.
-const MOCK_TOKEN = 'MOCK_JWT_TOKEN'; 
+// NOTE: This is a test/development script only.
+// For production, use authenticated API calls with real JWT tokens from login.
+// Do not commit real tokens to version control.
+const TEST_JWT_TOKEN = process.env.TEST_JWT_TOKEN || 'test-token-for-development'; 
 
 async function runTests() {
   console.log('🚀 Starting User Interaction Tests...');
@@ -14,8 +15,8 @@ async function runTests() {
     console.log('\n1. Testing Merchant Onboarding...');
     const merchantResponse = await axios.post(`${API_URL}/merchants/onboard`, {
       name: 'Test Merchant SME',
-      email: 'test-merchant@example.com',
-      walletAddress: 'GB...TEST_MERCHANT_ADDRESS',
+      email: 'test.merchant@your-domain.com',
+      walletAddress: 'GXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
       kycStatus: 'PENDING'
     });
     const merchantId = merchantResponse.data.id;
@@ -41,7 +42,7 @@ async function runTests() {
     console.log('\n4. Testing Merchant Stats...');
     try {
         const statsResponse = await axios.get(`${API_URL}/merchants/me/stats`, {
-            headers: { Authorization: `Bearer ${MOCK_TOKEN}` }
+            headers: { Authorization: `Bearer ${TEST_JWT_TOKEN}` }
         });
         console.log('✅ Merchant Stats:', statsResponse.data);
     } catch (e: any) {
@@ -52,11 +53,11 @@ async function runTests() {
     console.log('\n5. Testing Escrow Creation...');
     try {
         const escrowResponse = await axios.post(`${API_URL}/payments/escrow`, {
-            receiverAddress: 'GC...RECEIVER_ADDRESS',
-            tokenAddress: 'GC...TOKEN_ADDRESS',
+            receiverAddress: 'GXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
+            tokenAddress: 'GXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
             amount: 500.00
         }, {
-            headers: { Authorization: `Bearer ${MOCK_TOKEN}` }
+            headers: { Authorization: `Bearer ${TEST_JWT_TOKEN}` }
         });
         console.log('✅ Escrow Response:', escrowResponse.data.status, '-', escrowResponse.data.message);
     } catch (e: any) {
@@ -67,7 +68,7 @@ async function runTests() {
     console.log('\n6. Testing KYC Update...');
     try {
         await axios.put(`${API_URL}/merchants/${merchantId}/kyc`, { status: 'VERIFIED' }, {
-            headers: { Authorization: `Bearer ${MOCK_TOKEN}` }
+            headers: { Authorization: `Bearer ${TEST_JWT_TOKEN}` }
         });
         console.log('✅ KYC Updated to VERIFIED');
     } catch (e: any) {
@@ -78,7 +79,7 @@ async function runTests() {
     console.log('\n7. Testing Get Merchant Profile...');
     try {
         const profileResponse = await axios.get(`${API_URL}/merchants/me`, {
-            headers: { Authorization: `Bearer ${MOCK_TOKEN}` }
+            headers: { Authorization: `Bearer ${TEST_JWT_TOKEN}` }
         });
         console.log('✅ Merchant Profile:', profileResponse.data.name);
     } catch (e: any) {
@@ -89,7 +90,7 @@ async function runTests() {
     console.log('\n8. Testing Get Merchant Transactions...');
     try {
         const txListResponse = await axios.get(`${API_URL}/merchants/${merchantId}/transactions`, {
-            headers: { Authorization: `Bearer ${MOCK_TOKEN}` }
+            headers: { Authorization: `Bearer ${TEST_JWT_TOKEN}` }
         });
         console.log(`✅ Retrieved ${txListResponse.data.length} transactions`);
     } catch (e: any) {
@@ -104,7 +105,7 @@ async function runTests() {
             amount: 50.00,
             asset: 'USDC'
         }, {
-            headers: { Authorization: `Bearer ${MOCK_TOKEN}` }
+            headers: { Authorization: `Bearer ${TEST_JWT_TOKEN}` }
         });
         console.log('✅ Transfer Initiated:', transferResponse.data.txHash);
     } catch (e: any) {

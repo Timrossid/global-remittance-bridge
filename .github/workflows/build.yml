@@ -52,5 +52,5 @@ jobs:
         env:
           NEXT_PUBLIC_API_URL: 'http://localhost:3001'
           NEXT_PUBLIC_NETWORK: 'testnet'
-          NEXT_PUBLIC_CONTRACT_ID: 'CCPLACEHOLDER'
+          NEXT_PUBLIC_CONTRACT_ID: 'CBL3I4IDMIUZJEJG56DV2VP6K7L2ROLT3JYCC53KNU7PPUX6DGPJJVKC'
         run: npm run build
