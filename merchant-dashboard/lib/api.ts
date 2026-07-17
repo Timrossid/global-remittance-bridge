@@ -40,6 +40,8 @@ async function refreshAccessToken(): Promise<void> {
   });
 
   if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({}));
+    console.error('[API] Refresh failed:', response.status, errorBody);
     clearTokens();
     throw new Error('Session expired. Please log in again.');
   }
@@ -52,7 +54,7 @@ async function refreshAccessToken(): Promise<void> {
   }
 }
 
-async function fetchWithAuth(endpoint: string, options: RequestInit = {}): Promise<any> {
+async function fetchWithAuth(endpoint: string, options: RequestInit = {}, retryCount = 0): Promise<any> {
   if (!API_URL) {
     throw new Error('API URL is not configured. Please set NEXT_PUBLIC_API_URL in your deployment environment.');
   }
@@ -73,14 +75,14 @@ async function fetchWithAuth(endpoint: string, options: RequestInit = {}): Promi
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  let response = await fetch(`${API_URL}${endpoint}`, {
+  const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers,
   });
 
   if (response.status === 401 && typeof window !== 'undefined') {
     const refreshToken = getRefreshToken();
-    if (refreshToken && !isRefreshing) {
+    if (refreshToken && !isRefreshing && retryCount === 0) {
       isRefreshing = true;
       refreshPromise = refreshAccessToken()
         .catch((err) => {
@@ -98,10 +100,7 @@ async function fetchWithAuth(endpoint: string, options: RequestInit = {}): Promi
       const newToken = localStorage.getItem('token');
       if (newToken) {
         headers['Authorization'] = `Bearer ${newToken}`;
-        response = await fetch(`${API_URL}${endpoint}`, {
-          ...options,
-          headers,
-        });
+        return fetchWithAuth(endpoint, options, 1);
       }
     } else if (!refreshToken) {
       clearTokens();
@@ -111,6 +110,7 @@ async function fetchWithAuth(endpoint: string, options: RequestInit = {}): Promi
 
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
+    console.error('[API] Request failed:', response.status, endpoint, errorBody);
     if (response.status === 401) {
       clearTokens();
       window.location.href = '/login';

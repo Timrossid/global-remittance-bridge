@@ -10,7 +10,6 @@ import { NotificationModule } from './notifications/notification.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
-import { JwtStrategy } from './auth/jwt.strategy';
 
 /**
  * Root application module for the Payment API.
@@ -30,7 +29,7 @@ import { JwtStrategy } from './auth/jwt.strategy';
     AnchorModule,
     NotificationModule,
   ],
-  providers: [PrismaService, StellarService, SorobanService, JwtStrategy],
+  providers: [PrismaService, StellarService, SorobanService],
   exports: [PrismaService, StellarService, SorobanService],
 })
 export class AppModule {}
