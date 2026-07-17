@@ -5,6 +5,7 @@
 - **Merchant Dashboard:** https://merchant-dashboard-rosy.vercel.app
 - **Payment API:** https://global-remittance-api.onrender.com
 - **Stellar Testnet Explorer:** https://stellar.expert/explorer/testnet
+- **Analytics Page:** https://merchant-dashboard-rosy.vercel.app/analytics
 
 ## Getting Started (For Testers)
 

@@ -63,4 +63,60 @@ export class MerchantService {
       },
     });
   }
+
+  async getAnalytics(merchantId: string) {
+    const transactions = await this.prisma.transaction.findMany({
+      where: { merchantId },
+      orderBy: { createdAt: 'desc' },
+      take: 200,
+      select: {
+        status: true,
+        amount: true,
+        currency: true,
+        createdAt: true,
+      },
+    });
+
+    const now = new Date();
+    const days = Array.from({ length: 30 }, (_, i) => {
+      const d = new Date(now);
+      d.setDate(d.getDate() - (29 - i));
+      return d.toISOString().slice(0, 10);
+    });
+
+    const dailyMap = new Map<string, { volume: number; count: number }>();
+    days.forEach((d) => dailyMap.set(d, { volume: 0, count: 0 }));
+
+    transactions.forEach((tx) => {
+      const day = tx.createdAt.toISOString().slice(0, 10);
+      if (dailyMap.has(day)) {
+        const entry = dailyMap.get(day)!;
+        entry.volume += Number(tx.amount);
+        entry.count += 1;
+      }
+    });
+
+    const dailyVolume = days.map((day) => ({
+      day,
+      volume: dailyMap.get(day)!.volume,
+      count: dailyMap.get(day)!.count,
+    }));
+
+    const statusCounts = transactions.reduce<Record<string, number>>((acc, tx) => {
+      acc[tx.status] = (acc[tx.status] || 0) + 1;
+      return acc;
+    }, {});
+
+    const currencyCounts = transactions.reduce<Record<string, number>>((acc, tx) => {
+      acc[tx.currency] = (acc[tx.currency] || 0) + 1;
+      return acc;
+    }, {});
+
+    return {
+      dailyVolume,
+      statusCounts,
+      currencyCounts,
+      totalAnalyzed: transactions.length,
+    };
+  }
 }

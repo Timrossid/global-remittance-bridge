@@ -260,6 +260,7 @@ PostgreSQL (Supabase) ◄─── Transaction Indexer
 ## 📊 Analytics & Monitoring
 
 - **Vercel Analytics** — Integrated in the merchant dashboard (`@vercel/analytics`). Tracks page views, unique visitors, and navigation patterns automatically on Vercel deployments.
+- **Custom Analytics Page** — `/analytics` provides daily volume trends, status breakdowns, and currency distribution charts using the `GET /merchants/me/analytics` API.
 - **GitHub Actions** — CI runs lint, build, and tests on every push/PR.
 - **Stellar Expert** — All on-chain transactions are publicly visible at `https://stellar.expert/explorer/testnet`.
 
@@ -279,7 +280,7 @@ See the [screenshots/](screenshots/) directory for:
 - Dashboard UI (desktop)
 - Mobile responsive view
 - Transactions page
-- Vercel Analytics dashboard
+- Custom analytics dashboard (daily volume, status/currency breakdowns)
 - Deployed contract on Stellar Expert
 - Proof of 10+ wallet interactions
 

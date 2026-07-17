@@ -26,7 +26,7 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="p-6 md:p-8 max-w-2xl mx-auto">
+      <div className="p-4 sm:p-6 md:p-8 max-w-2xl mx-auto">
         <div className="h-8 w-24 bg-gray-200 rounded animate-pulse mb-6" />
         <div className="space-y-4">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -39,7 +39,7 @@ export default function SettingsPage() {
 
   if (error) {
     return (
-      <div className="p-6 md:p-8 max-w-2xl mx-auto">
+      <div className="p-4 sm:p-6 md:p-8 max-w-2xl mx-auto">
         <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
           Failed to load settings: {error}
         </div>
@@ -48,10 +48,10 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="p-6 md:p-8 max-w-2xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-        <p className="text-gray-500 text-sm mt-1">Manage your account and integration settings</p>
+    <div className="p-4 sm:p-6 md:p-8 max-w-2xl mx-auto">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Settings</h1>
+        <p className="text-gray-500 text-xs sm:text-sm mt-1">Manage your account and integration settings</p>
       </div>
 
       {/* Profile section */}

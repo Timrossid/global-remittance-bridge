@@ -60,16 +60,16 @@ export default function WalletPage() {
   }
 
   return (
-    <div className="p-6 md:p-8 max-w-4xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Treasury Wallet</h1>
-        <p className="text-gray-500 text-sm mt-1">Your Stellar wallet and settlement overview</p>
+    <div className="p-4 sm:p-6 md:p-8 max-w-4xl mx-auto">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Treasury Wallet</h1>
+        <p className="text-gray-500 text-xs sm:text-sm mt-1">Your Stellar wallet and settlement overview</p>
       </div>
 
       {/* Balance card */}
-      <div className="bg-gradient-to-br from-indigo-600 to-indigo-800 text-white p-8 rounded-2xl shadow-lg mb-6">
-        <p className="text-indigo-200 text-sm mb-1">Total Received Volume</p>
-        <h2 className="text-4xl font-bold">
+      <div className="bg-gradient-to-br from-indigo-600 to-indigo-800 text-white p-5 sm:p-8 rounded-2xl shadow-lg mb-6">
+        <p className="text-indigo-200 text-xs sm:text-sm mb-1">Total Received Volume</p>
+        <h2 className="text-2xl sm:text-4xl font-bold">
           ${(stats?.totalVolume ?? 0).toLocaleString(undefined, {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
@@ -77,7 +77,7 @@ export default function WalletPage() {
         </h2>
         <p className="text-indigo-300 text-xs mt-2">{stats?.completedCount ?? 0} completed payments</p>
 
-        <div className="mt-6 flex flex-wrap gap-3">
+        <div className="mt-4 sm:mt-6 flex flex-wrap gap-2 sm:gap-3">
           <a
             href={`https://stellar.expert/explorer/testnet/account/${merchant?.walletAddress}`}
             target="_blank"

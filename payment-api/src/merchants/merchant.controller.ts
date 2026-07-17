@@ -35,6 +35,12 @@ export class MerchantController {
     return this.merchantService.getStats(req.user.userId);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('me/analytics')
+  async getAnalytics(@Request() req) {
+    return this.merchantService.getAnalytics(req.user.userId);
+  }
+
   /**
    * GET /merchants/me/transactions
    * Returns the merchant's transaction history (most recent first).

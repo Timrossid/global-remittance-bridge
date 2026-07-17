@@ -23,8 +23,15 @@ export default function RegisterPage() {
     setLoading(true);
     setError(null);
 
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    if (!apiUrl) {
+      setError('Application is not configured correctly. Please contact support.');
+      setLoading(false);
+      return;
+    }
+
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
+      const res = await fetch(`${apiUrl}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
@@ -38,6 +45,9 @@ export default function RegisterPage() {
 
       localStorage.setItem('token', data.access_token);
       localStorage.setItem('merchant', JSON.stringify(data.merchant));
+      if (data.refresh_token) {
+        localStorage.setItem('refresh_token', data.refresh_token);
+      }
       router.push('/');
     } catch (err: any) {
       setError(err.message);

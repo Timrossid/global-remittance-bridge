@@ -21,14 +21,14 @@ class LoginDto {
   password: string;
 }
 
+class RefreshDto {
+  refresh_token: string;
+}
+
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  /**
-   * POST /auth/register
-   * Creates a new merchant account and returns a JWT token.
-   */
   @Post('register')
   async register(@Body() dto: RegisterDto) {
     if (!dto.email || !dto.password || !dto.name || !dto.walletAddress) {
@@ -37,10 +37,6 @@ export class AuthController {
     return this.authService.register(dto);
   }
 
-  /**
-   * POST /auth/login
-   * Authenticates an existing merchant and returns a JWT token.
-   */
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(@Body() dto: LoginDto) {
@@ -52,5 +48,14 @@ export class AuthController {
       throw new UnauthorizedException('Invalid email or password');
     }
     return result;
+  }
+
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  async refresh(@Body() dto: RefreshDto) {
+    if (!dto.refresh_token) {
+      throw new BadRequestException('refresh_token is required');
+    }
+    return this.authService.refreshAccessToken(dto.refresh_token);
   }
 }

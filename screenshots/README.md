@@ -14,9 +14,19 @@ This directory contains the required submission screenshots for the Global Micro
 ## Capture Checklist
 
 1. Open the live demo at https://merchant-dashboard-rosy.vercel.app.
-2. Sign in or register and navigate through the dashboard, wallet, and transactions views.
+2. Sign in or register and navigate through the dashboard, wallet, transactions, and analytics views.
 3. Capture the six images above and save them with the exact filenames listed here.
 4. Replace the placeholder images in this directory with fresh captures if you want a polished submission package.
+
+## Analytics Page
+
+The analytics dashboard is available at `/analytics` and shows:
+- Daily transaction volume bar chart (30-day trend)
+- Status breakdown donut chart (COMPLETED, PENDING, FAILED, CANCELLED)
+- Currency distribution donut chart
+- Summary statistics
+
+This page is powered by the new `GET /merchants/me/analytics` API endpoint.
 
 ## Demo Asset Notes
 

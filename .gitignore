@@ -27,6 +27,10 @@ dist/
 build/
 out/
 .next/
+*.tsbuildinfo
+
+# Lint configs
+.eslintrc.json
 
 # Other
 *.log

@@ -7,11 +7,21 @@ export const metadata: Metadata = {
   description:
     'Accept instant, low-cost international payments powered by Stellar and Soroban smart contracts.',
   metadataBase: new URL('https://merchant-dashboard-rosy.vercel.app'),
+  icons: {
+    icon: '/favicon.ico',
+  },
   openGraph: {
     title: 'Merchant Dashboard | Global Micro-Remittance Bridge',
     description: 'Accept instant, low-cost international payments powered by Stellar.',
     type: 'website',
   },
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: '#4f46e5',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
