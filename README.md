@@ -12,7 +12,7 @@ An open-source infrastructure enabling Small and Medium Enterprises (SMEs) to re
 | **Stellar Testnet Explorer** | [https://stellar.expert/explorer/testnet](https://stellar.expert/explorer/testnet) |
 | **Escrow Contract** | [CBL3I4IDMIUZJEJG56DV2VP6K7L2ROLT3JYCC53KNU7PPUX6DGPJJVKC](https://stellar.expert/explorer/testnet/contract/CBL3I4IDMIUZJEJG56DV2VP6K7L2ROLT3JYCC53KNU7PPUX6DGPJJVKC) |
 | **Settlement Contract** | [CBBH6JHHNKAC4E444EIYG3HGNPYLVFLY72OMRYCCLFZU4ASVU3AO73QR](https://stellar.expert/explorer/testnet/contract/CBBH6JHHNKAC4E444EIYG3HGNPYLVFLY72OMRYCCLFZU4ASVU3AO73QR) |
-| **Demo Video** | ▶️ **[Watch `screenshots/demo-recording.webm`](screenshots/demo-recording.webm)** — 2-min walkthrough of register → dashboard → transactions → wallet → analytics → feedback. See `screenshots/DEMO_VIDEO_GUIDE.md` for the script and below for publishing instructions. |
+| **Demo Video** | ▶️ **[Watch on GitHub Releases (demo-recording-v1)](https://github.com/Timrossid/global-remittance-bridge/releases/tag/demo-recording-v1)** — 2-min walkthrough of register → dashboard → transactions → wallet → analytics → feedback. Direct download: [demo-recording.webm](https://github.com/Timrossid/global-remittance-bridge/releases/download/demo-recording-v1/demo-recording.webm). |
 
 ---
 
@@ -260,9 +260,14 @@ PostgreSQL (Supabase) ◄─── Transaction Indexer
 
 ## 🎬 Demo Video
 
-A 2-minute silent walkthrough of the live dashboard is committed at
-[`screenshots/demo-recording.webm`](screenshots/demo-recording.webm) (≈2.5 MB, 1440×900).
-It is generated automatically by:
+A 2-minute silent walkthrough of the live dashboard is published on the GitHub
+**Release [demo-recording-v1](https://github.com/Timrossid/global-remittance-bridge/releases/tag/demo-recording-v1)**,
+with the `.webm` attached as a release asset.
+
+- 📺 View release: <https://github.com/Timrossid/global-remittance-bridge/releases/tag/demo-recording-v1>
+- ⬇️ Direct download: <https://github.com/Timrossid/global-remittance-bridge/releases/download/demo-recording-v1/demo-recording.webm>
+
+The recording is reproducible from scratch:
 
 ```bash
 cd merchant-dashboard
@@ -270,31 +275,12 @@ npm run demo:install-browser   # one-time: pulls Playwright Chromium
 npm run demo:record            # re-renders the recording into screenshots/demo-recording.webm
 ```
 
-### Publishing the video
-
-The committed `.webm` plays locally but most submission reviewers prefer a hosted
-URL. To publish:
-
-```bash
-# 1. (Optional) Re-encode to MP4 H.264 for max compatibility (needs local ffmpeg)
-ffmpeg -i screenshots/demo-recording.webm -c:v libx264 -preset fast -crf 23 \
-       -vf "scale=1440:900" screenshots/demo-recording.mp4
-
-# 2. Upload either file to:
-#    - YouTube  → unlisted or public     (https://studio.youtube.com)
-#    - Loom     → free, instant replay URL (https://loom.com)
-
-# 3. Paste the shareable URL into:
-#    - this README.md  → "Demo Video" row in the Live Links table
-#    - screenshots/DEMO_SUBMISSION_NOTES.md  → "Live Demo URLs" section
-```
-
-The script that produces the recording (`merchant-dashboard/scripts/record-demo.mjs`)
+The script (`merchant-dashboard/scripts/record-demo.mjs`)
 
 - Registers a fresh merchant via the live `/register` form
 - Walks through Dashboard → Transactions → Wallet → Analytics → Feedback
 - Overlays on-screen captions per section (silent-friendly)
-- Writes the final `.webm` and reports the demo merchant email + file size
+- Pins the recorded wall-clock to exactly 2:00 via per-section budgets
 
 ---
 

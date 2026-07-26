@@ -6,8 +6,9 @@
 - **Payment API:** https://global-remittance-api.onrender.com
 - **Stellar Testnet Explorer:** https://stellar.expert/explorer/testnet
 - **Analytics Page:** https://merchant-dashboard-rosy.vercel.app/analytics
-- **Demo Video (file):** [`screenshots/demo-recording.webm`](demo-recording.webm) (≈2.5 MB, 1440×900, 2-min silent walkthrough)
-- **Demo Video (hosted URL):** ▶️  *[Follow "Publishing the demo video" below to paste a shareable link once uploaded to YouTube/Loom]*
+- **Demo Video (hosted on GitHub):** ▶️ **[Release demo-recording-v1](https://github.com/Timrossid/global-remittance-bridge/releases/tag/demo-recording-v1)** — 2-min silent walkthrough attached as a release asset
+- **Demo Video (direct download):** [demo-recording.webm](https://github.com/Timrossid/global-remittance-bridge/releases/download/demo-recording-v1/demo-recording.webm) (≈3.6 MB · 1440×900 · WebM)
+- **Demo Video (in repo):** [`screenshots/demo-recording.webm`](demo-recording.webm) — the source file attached to the release above
 
 ## Getting Started (For Testers)
 
@@ -85,19 +86,41 @@ Each section gets a fixed-bottom dark caption so the video is self-explanatory w
 
 ## Publishing the demo video
 
-The committed `.webm` plays locally. For a hosted share URL:
+The `.webm` is already published as a **GitHub Release asset** — no YouTube or
+Loom needed. Reviewers can stream or download the video directly from the
+release page.
+
+The release was created by:
 
 ```bash
-# (Optional) Re-encode to MP4 H.264 for max compatibility — needs local ffmpeg
+git tag -a demo-recording-v1 -m 'Demo recording v1 — 2-min silent walkthrough of the live merchant dashboard'
+git push origin demo-recording-v1
+gh release create demo-recording-v1 \
+  --title '🎬 Demo Video · Global Micro-Remittance Bridge' \
+  --notes '…' \
+  screenshots/demo-recording.webm
+```
+
+### Verify the published release
+
+- Release page: <https://github.com/Timrossid/global-remittance-bridge/releases/tag/demo-recording-v1>
+- Direct download: <https://github.com/Timrossid/global-remittance-bridge/releases/download/demo-recording-v1/demo-recording.webm>
+- Asset must be `video/webm`, ≈3.6 MB, named `demo-recording.webm`
+
+### (Optional) Re-encode to MP4 for broader compatibility
+
+If a reviewer can't play WebM locally, re-encode (needs local ffmpeg):
+
+```bash
 ffmpeg -i screenshots/demo-recording.webm -c:v libx264 -preset fast -crf 23 \
        -vf "scale=1440:900" screenshots/demo-recording.mp4
 ```
 
-1. Upload either file to **YouTube (unlisted/public)** or **Loom**.
-2. Copy the shareable link.
-3. Paste it into:
-   - `README.md` — **Live Links** table, "Demo Video" row
-   - this file — **Live Demo URLs** section, replace the `*[…]*` line
+…and attach `screenshots/demo-recording.mp4` to the same release:
+
+```bash
+gh release upload demo-recording-v1 screenshots/demo-recording.mp4
+```
 
 ## Demo Video Script
 
@@ -169,6 +192,6 @@ To add a Google Form:
 - [x] 10+ wallet interactions recorded (12 verified Stellar testnet hashes — see table above)
 - [x] 7 screenshots captured (dashboard, transactions, wallet, analytics, feedback, mobile, contract-deployed)
 - [x] Demo video recorded & committed (`screenshots/demo-recording.webm`, 2-min walkthrough, registration verified end-to-end)
-- [ ] Demo video published — *upload to YouTube/Loom and paste the share URL in README.md + above*
+- [x] Demo video published — *GitHub Release [demo-recording-v1](https://github.com/Timrossid/global-remittance-bridge/releases/tag/demo-recording-v1) with `demo-recording.webm` attached*
 - [x] Feedback form implemented at `/feedback`
 - [x] All URLs and contract addresses verified
