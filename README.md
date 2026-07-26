@@ -284,6 +284,15 @@ The script (`merchant-dashboard/scripts/record-demo.mjs`)
 
 ---
 
+## 📣 User Feedback
+
+The merchant dashboard ships a built-in [`/feedback`](https://merchant-dashboard-rosy.vercel.app/feedback)
+page (rating + category + free-text message). See [`docs/USER_FEEDBACK.md`](docs/USER_FEEDBACK.md)
+for the collection mechanism, observed issues captured during the submission
+build, and the action items currently in flight.
+
+---
+
 ## 📊 Analytics & Monitoring
 
 - **Vercel Analytics** — Integrated in the merchant dashboard (`@vercel/analytics`). Tracks page views, unique visitors, and navigation patterns automatically on Vercel deployments.

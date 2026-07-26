@@ -188,5 +188,5 @@ To add a Google Form:
 - [x] 7 screenshots captured (dashboard, transactions, wallet, analytics, feedback, mobile, contract-deployed)
 - [x] Demo video recorded & committed (`screenshots/demo-recording.webm`, 2-min walkthrough, registration verified end-to-end)
 - [x] Demo video published — *GitHub Release [demo-recording-v1](https://github.com/Timrossid/global-remittance-bridge/releases/tag/demo-recording-v1) with `demo-recording.webm` attached*
-- [x] Feedback form implemented at `/feedback`
+- [x] Feedback form implemented at `/feedback`; collection mechanism + observed issues summarized in [`docs/USER_FEEDBACK.md`](../docs/USER_FEEDBACK.md)
 - [x] All URLs and contract addresses verified
