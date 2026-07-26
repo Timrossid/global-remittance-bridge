@@ -99,8 +99,7 @@ The recording script targets exactly **2:00 wall-clock** using per-section budge
 
 ## Publishing the demo video
 
-The `.webm` is already published as a **GitHub Release asset** — no YouTube or
-Loom needed. Reviewers can stream or download the video directly from the
+The `.webm` is already published as a **GitHub Release asset** — no third-party hosting required. Reviewers can stream or download the video directly from the
 release page.
 
 The release was created by:
