@@ -37,4 +37,4 @@ out/
 
 # Scratch / exploratory output (Playwright captures never meant for the repo)
 merchant-dashboard/screenshots/
-.demo-video-temp/
+/.demo-video-temp/
