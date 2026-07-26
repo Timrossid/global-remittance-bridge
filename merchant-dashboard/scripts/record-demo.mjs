@@ -37,13 +37,29 @@ const BASE_URL = 'https://merchant-dashboard-rosy.vercel.app';
 const VIEWPORT = { width: 1440, height: 900 };
 
 const T = {
-  short: 250,
-  medium: 700,
-  long: 1500,
-  afterNav: 900,
-  perChar: 35,
-  settle: 2400,
+  short: 400,
+  medium: 1200,
+  long: 3500,
+  afterNav: 1800,
+  perChar: 70,
+  settle: 4000,
 };
+
+// Per-section target durations tuned so the sum lands at exactly 2:00.
+// Each section gets a generous budget; the sectionBudget() helper pads up
+// to the budget if the natural script time runs short, ensuring the final
+// video always lands at 2:00 ± a few frames regardless of network jitter.
+const SECTION_BUDGET_MS = {
+  intro: 5_000,       // 0:00–0:05  pre-roll /login
+  signup: 28_000,     // 0:05–0:33  register & land on dashboard
+  dashboard: 18_000,  // 0:33–0:51  stats + recent tx table
+  transactions: 16_000, // 0:51–1:07 transaction list
+  wallet: 8_000,      // 1:07–1:15 wallet view
+  analytics: 8_000,   // 1:15–1:23 analytics view
+  feedback: 22_000,   // 1:23–1:45 feedback form + submit
+  recap: 15_000,      // 1:45–2:00 outro / thanks-for-watching
+};
+const TOTAL_TARGET_MS = Object.values(SECTION_BUDGET_MS).reduce((a, b) => a + b, 0);
 
 const SECTIONS = [
   'Sign-Up Flow — creating a new merchant',
@@ -194,7 +210,21 @@ async function smoothScroll(page, fraction) {
   await page.evaluate((f) => {
     window.scrollTo({ top: document.body.scrollHeight * f, behavior: 'smooth' });
   }, fraction);
-  await page.waitForTimeout(700);
+  await page.waitForTimeout(900);
+}
+
+// Pads the runtime so the section's wall-clock time matches its assigned
+// SECTION_BUDGET_MS target. The browser/page stays on screen during the pad
+// so the viewer absorbs the page rather than seeing a frozen state.
+async function sectionBudget(label, startedAt, budgetMs) {
+  const elapsed = Date.now() - startedAt;
+  const remaining = budgetMs - elapsed;
+  if (remaining > 0) {
+    console.log(`  ⏱ ${label}: ${(elapsed/1000).toFixed(1)}s → padding +${(remaining/1000).toFixed(1)}s`);
+    await new Promise((r) => setTimeout(r, remaining));
+  } else {
+    console.log(`  ⏱ ${label}: ${(elapsed/1000).toFixed(1)}s (over budget ${(-remaining/1000).toFixed(1)}s)`);
+  }
 }
 
 // ─── main ──────────────────────────────────────────────────────────────────
@@ -237,47 +267,64 @@ async function recordDemoInner(setBrowser) {
   const page = await context.newPage();
   page.setDefaultTimeout(20000);
 
+  const recordingStart = Date.now();
+  let sectionStart = Date.now();
+
   // ── INTRO ────────────────────────────────────────────────
   await page.goto(`${BASE_URL}/login`, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(T.long);
+  await sectionBudget('intro', sectionStart, SECTION_BUDGET_MS.intro);
 
   // ── SECTION 1: Sign-Up Flow ──────────────────────────────
-  await showCaption(page, `① ${SECTIONS[0]}`, 'Stellar wallet, email, password — fresh merchant in ~30 s', 1500);
+  sectionStart = Date.now();
+  await showCaption(page, `① ${SECTIONS[0]}`, 'Stellar wallet, email, password — fresh merchant in ~30 s', 2800);
   const merchant = await ensureRegistered(page);
   console.log('  → registration:', merchant);
   await hideCaption(page);
+  await sectionBudget('signup', sectionStart, SECTION_BUDGET_MS.signup);
 
   // ── SECTION 2: Dashboard Overview ────────────────────────
+  sectionStart = Date.now();
   await page.goto(`${BASE_URL}/dashboard`, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(T.settle);
-  await showCaption(page, `② ${SECTIONS[1]}`, 'Volume, settlement status, and recent activity at a glance', 1600);
+  await showCaption(page, `② ${SECTIONS[1]}`, 'Volume, settlement status, and recent activity at a glance', 2800);
   await smoothScroll(page, 0.55);
   await smoothScroll(page, 0);
   await hideCaption(page);
+  await sectionBudget('dashboard', sectionStart, SECTION_BUDGET_MS.dashboard);
 
-  // ── SECTION 3: Transactions & Wallet ─────────────────────
+  // ── SECTION 3a: Transactions ─────────────────────────────
+  sectionStart = Date.now();
   await page.goto(`${BASE_URL}/transactions`, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(T.long);
-  await showCaption(page, `③ ${SECTIONS[2]}`, 'Every shipment linked to its on-chain Stellar transaction hash', 1700);
+  await showCaption(page, `③ ${SECTIONS[2]}`, 'Every shipment linked to its on-chain Stellar transaction hash', 2800);
   await smoothScroll(page, 0.4);
   await smoothScroll(page, 0);
+  await sectionBudget('transactions', sectionStart, SECTION_BUDGET_MS.transactions);
 
+  // ── SECTION 3b: Wallet ───────────────────────────────────
+  sectionStart = Date.now();
   await page.goto(`${BASE_URL}/wallet`, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(T.long);
   await hideCaption(page);
+  await sectionBudget('wallet', sectionStart, SECTION_BUDGET_MS.wallet);
 
-  // ── SECTION 4: Feedback ─────────────────────────────────
+  // ── SECTION 3c: Analytics ────────────────────────────────
+  sectionStart = Date.now();
   await page.goto(`${BASE_URL}/analytics`, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(T.long);
+  await sectionBudget('analytics', sectionStart, SECTION_BUDGET_MS.analytics);
 
+  // ── SECTION 4: Feedback ─────────────────────────────────
+  sectionStart = Date.now();
   await page.goto(`${BASE_URL}/feedback`, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(T.long);
-  await showCaption(page, `④ ${SECTIONS[3]}`, 'Real users, real signal — straight from the dashboard', 1700);
+  await showCaption(page, `④ ${SECTIONS[3]}`, 'Real users, real signal — straight from the dashboard', 2800);
   try {
     await page.fill('textarea', 'Love the real-time Stellar tracking and the clean dashboard UX!', {
       timeout: 4000,
     });
-    await page.waitForTimeout(700);
+    await page.waitForTimeout(900);
   } catch {
     /* form may use a different selector on this deployment */
   }
@@ -287,18 +334,28 @@ async function recordDemoInner(setBrowser) {
   } catch {}
   try {
     await page.locator('button:has-text("Submit")').first().click({ timeout: 2000 });
-    await page.waitForTimeout(1500);
+    await page.waitForTimeout(1800);
   } catch {}
   await hideCaption(page);
+  await sectionBudget('feedback', sectionStart, SECTION_BUDGET_MS.feedback);
 
   // ── RECAP / OUTRO ────────────────────────────────────────
+  sectionStart = Date.now();
   await page.goto(`${BASE_URL}/dashboard`, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(T.settle);
-  await showCaption(page, RECAP_TEXT, 'github.com/Timrossid/global-remittance-bridge', 2200);
+  await showCaption(page, RECAP_TEXT, 'github.com/Timrossid/global-remittance-bridge · try it: merchant-dashboard-rosy.vercel.app', 2800);
   await hideCaption(page);
+  // Slow back-and-forth scroll to fill the recap budget with motion instead of a frozen frame
+  for (let i = 0; i < 3; i++) {
+    await page.evaluate((f) => window.scrollTo({ top: document.body.scrollHeight * f, behavior: 'smooth' }), i % 2 === 0 ? 0.4 : 0);
+    await page.waitForTimeout(700);
+  }
+  await sectionBudget('recap', sectionStart, SECTION_BUDGET_MS.recap);
 
   // ── FINALIZE THE VIDEO ───────────────────────────────────
-  console.log('▶ Finalizing the video recording…');
+  const recordingWallMs = Date.now() - recordingStart;
+  console.log(`▶ Finalizing the video recording…`);
+  console.log(`   in-page wall-clock duration: ${(recordingWallMs/1000).toFixed(1)}s (target ${(TOTAL_TARGET_MS/1000).toFixed(0)}s)`);
   await context.close(); // crucial: closes video, flushes file
   await new Promise((r) => setTimeout(r, 1200)); // let fs flush
 
