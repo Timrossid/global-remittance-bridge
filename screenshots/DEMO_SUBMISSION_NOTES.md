@@ -35,7 +35,7 @@ All hashes verified against `https://horizon-testnet.stellar.org` (HTTP 200 conf
 | 5 | `be47b1a2aecbf7f15a6d8cc8b8b23b36e14d6036cf3c63ffef039d17e99dc2c6` | 32.10 | XLM | COMPLETED | [View](https://stellar.expert/explorer/testnet/tx/be47b1a2aecbf7f15a6d8cc8b8b23b36e14d6036cf3c63ffef039d17e99dc2c6) |
 | 6 | `0bdf0bb69e664b298e5fda67e59859bc563685c2185c23a4ca03efd608d56719` | 180.00 | USDC | FAILED | [View](https://stellar.expert/explorer/testnet/tx/0bdf0bb69e664b298e5fda67e59859bc563685c2185c23a4ca03efd608d56719) |
 | 7 | `9ba671b92d912bfdf65ce029c9026c661711172405daa6ea1b6ce13d92565070` | 95.75 | XLM | COMPLETED | [View](https://stellar.expert/explorer/testnet/tx/9ba671b92d912bfdf65ce029c9026c661711172405daa6ea1b6ce13d92565070) |
-| 8 | `e0fa25f207bdb5bc9c9250abee7bcea3ec75a22ea71f9d6587c00488bae038b6` | 410.20 | USDC | PENDING | [View](https://stellar.expert/explorer/testnet/tx/e0fa25f207bdb5bc9c9250abee7bcea3ec75a22ea71f9d6587c00488bae038b6) |
+| 8 | `e0fa25f207bdb5bc9c9250abee7bcea3ec75a22ea71f9d6587c00488bae038b6` | 410.20 | USDC | PENDING | [View](https://stellar.expert/explorer/testnet/tx/e0fa25f207bdb5bc9c9250abee7ec75a22ea71f9d6587c00488bae038b6) |
 | 9 | `c2cb78b8cdbab537d638cb2bdca9bffcbc4ffe4a2685164d8ffac4aaa98c9d46` | 60.00 | XLM | COMPLETED | [View](https://stellar.expert/explorer/testnet/tx/c2cb78b8cdbab537d638cb2bdca9bffcbc4ffe4a2685164d8ffac4aaa98c9d46) |
 | 10 | `718574825c5432afab71c1ce5f98ebf3cf605ab0359d2c585f5e24baefadf1db` | 220.80 | USDC | COMPLETED | [View](https://stellar.expert/explorer/testnet/tx/718574825c5432afab71c1ce5f98ebf3cf605ab0359d2c585f5e24baefadf1db) |
 | 11 | `7579a384cc3a171c6f445af243289b966c5c4d3c29fe9aec5358a34432e7d015` | 150.00 | XLM | CANCELLED | [View](https://stellar.expert/explorer/testnet/tx/7579a384cc3a171c6f445af243289b966c5c4d3c29fe9aec5358a34432e7d015) |
@@ -84,6 +84,19 @@ This walks through the exact flow in `DEMO_VIDEO_GUIDE.md`:
 
 Each section gets a fixed-bottom dark caption so the video is self-explanatory without audio.
 
+The recording script targets exactly **2:00 wall-clock** using per-section budgets:
+
+| Section | Target | What it covers |
+|---|---|---|
+| intro | 0:00–0:05 | Pre-roll /login |
+| signup | 0:05–0:33 | Registration + land on dashboard |
+| dashboard | 0:33–0:51 | Stats + recent transactions |
+| transactions | 0:51–1:07 | Transaction list with Stellar tx hashes |
+| wallet | 1:07–1:15 | Wallet view |
+| analytics | 1:15–1:23 | Analytics dashboard |
+| feedback | 1:23–1:45 | Feedback form + submit |
+| recap | 1:45–2:00 | Outro + thanks-for-watching |
+
 ## Publishing the demo video
 
 The `.webm` is already published as a **GitHub Release asset** — no YouTube or
@@ -121,23 +134,6 @@ ffmpeg -i screenshots/demo-recording.webm -c:v libx264 -preset fast -crf 23 \
 ```bash
 gh release upload demo-recording-v1 screenshots/demo-recording.mp4
 ```
-
-## Demo Video Script
-
-Record a 2–3 minute video showing:
-
-1. **Sign-up flow** (30s) — Register a new merchant account
-2. **Dashboard overview** (30s) — Show stats and transaction list
-3. **Payment initiation** (60s) — Initiate a transfer and track it
-4. **Feedback submission** (30s) — Fill out the feedback form
-5. **Wallet integration** (optional) — Show Stellar wallet connection
-
-### Recording Tools
-- **Loom:** https://loom.com (free, browser-based)
-- **YouTube:** Upload unlisted or private video
-- **OBS Studio:** Free open-source screen recorder
-
-**Output:** MP4 or webm, 1080p or higher, upload to cloud storage and share the link
 
 ## Feedback Collection
 
