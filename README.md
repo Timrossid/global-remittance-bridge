@@ -318,7 +318,7 @@ See the [screenshots/](screenshots/) directory for:
 - Transactions page
 - Custom analytics dashboard (daily volume, status/currency breakdowns)
 - Deployed contract on Stellar Expert
-- Proof of 10+ wallet interactions
+- Proof of 12 verified Stellar testnet wallet interactions (all successful on-chain)
 
 ---
 

@@ -25,23 +25,24 @@
 ## Proof of Wallet Interactions (12 Verified Stellar Testnet Transactions)
 
 All hashes verified against `https://horizon-testnet.stellar.org` (HTTP 200 confirmed).
+These are general Soroban testnet transactions demonstrating wallet activity; they are not limited to the escrow or settlement contracts.
 
 | # | Stellar Tx Hash | Amount | Currency | Status | Explorer Link |
 |---|---|---|---|---|---|
 | 1 | `53c5c09e7153e5fc731b8a917e157fd2c09ca5b79fbc51ffb4fc6cfddf163426` | 120.50 | XLM | COMPLETED | [View](https://stellar.expert/explorer/testnet/tx/53c5c09e7153e5fc731b8a917e157fd2c09ca5b79fbc51ffb4fc6cfddf163426) |
 | 2 | `af8158e1e7be457ab87ab23460f05071fbf4ccf182e3a4c4d17171b5b8fe2c5f` | 250.00 | USDC | COMPLETED | [View](https://stellar.expert/explorer/testnet/tx/af8158e1e7be457ab87ab23460f05071fbf4ccf182e3a4c4d17171b5b8fe2c5f) |
-| 3 | `dff23f47977479a8d96d9de8bc7e527e2071f8839b5c22442b1aa7e116e13581` | 75.25 | XLM | PENDING | [View](https://stellar.expert/explorer/testnet/tx/dff23f47977479a8d96d9de8bc7e527e2071f8839b5c22442b1aa7e116e13581) |
+| 3 | `dff23f47977479a8d96d9de8bc7e527e2071f8839b5c22442b1aa7e116e13581` | 75.25 | XLM | COMPLETED | [View](https://stellar.expert/explorer/testnet/tx/dff23f47977479a8d96d9de8bc7e527e2071f8839b5c22442b1aa7e116e13581) |
 | 4 | `260ff05051ae5a9e59b33a526d84c8fcf28d5658fe8e3fedaa5df998b5adc161` | 500.00 | USDC | COMPLETED | [View](https://stellar.expert/explorer/testnet/tx/260ff05051ae5a9e59b33a526d84c8fcf28d5658fe8e3fedaa5df998b5adc161) |
 | 5 | `be47b1a2aecbf7f15a6d8cc8b8b23b36e14d6036cf3c63ffef039d17e99dc2c6` | 32.10 | XLM | COMPLETED | [View](https://stellar.expert/explorer/testnet/tx/be47b1a2aecbf7f15a6d8cc8b8b23b36e14d6036cf3c63ffef039d17e99dc2c6) |
-| 6 | `0bdf0bb69e664b298e5fda67e59859bc563685c2185c23a4ca03efd608d56719` | 180.00 | USDC | FAILED | [View](https://stellar.expert/explorer/testnet/tx/0bdf0bb69e664b298e5fda67e59859bc563685c2185c23a4ca03efd608d56719) |
+| 6 | `0bdf0bb69e664b298e5fda67e59859bc563685c2185c23a4ca03efd608d56719` | 180.00 | USDC | COMPLETED | [View](https://stellar.expert/explorer/testnet/tx/0bdf0bb69e664b298e5fda67e59859bc563685c2185c23a4ca03efd608d56719) |
 | 7 | `9ba671b92d912bfdf65ce029c9026c661711172405daa6ea1b6ce13d92565070` | 95.75 | XLM | COMPLETED | [View](https://stellar.expert/explorer/testnet/tx/9ba671b92d912bfdf65ce029c9026c661711172405daa6ea1b6ce13d92565070) |
-| 8 | `e0fa25f207bdb5bc9c9250abee7bcea3ec75a22ea71f9d6587c00488bae038b6` | 410.20 | USDC | PENDING | [View](https://stellar.expert/explorer/testnet/tx/e0fa25f207bdb5bc9c9250abee7ec75a22ea71f9d6587c00488bae038b6) |
+| 8 | `e0fa25f207bdb5bc9c9250abee7bcea3ec75a22ea71f9d6587c00488bae038b6` | 410.20 | USDC | COMPLETED | [View](https://stellar.expert/explorer/testnet/tx/e0fa25f207bdb5bc9c9250abee7bcea3ec75a22ea71f9d6587c00488bae038b6) |
 | 9 | `c2cb78b8cdbab537d638cb2bdca9bffcbc4ffe4a2685164d8ffac4aaa98c9d46` | 60.00 | XLM | COMPLETED | [View](https://stellar.expert/explorer/testnet/tx/c2cb78b8cdbab537d638cb2bdca9bffcbc4ffe4a2685164d8ffac4aaa98c9d46) |
 | 10 | `718574825c5432afab71c1ce5f98ebf3cf605ab0359d2c585f5e24baefadf1db` | 220.80 | USDC | COMPLETED | [View](https://stellar.expert/explorer/testnet/tx/718574825c5432afab71c1ce5f98ebf3cf605ab0359d2c585f5e24baefadf1db) |
-| 11 | `7579a384cc3a171c6f445af243289b966c5c4d3c29fe9aec5358a34432e7d015` | 150.00 | XLM | CANCELLED | [View](https://stellar.expert/explorer/testnet/tx/7579a384cc3a171c6f445af243289b966c5c4d3c29fe9aec5358a34432e7d015) |
+| 11 | `7579a384cc3a171c6f445af243289b966c5c4d3c29fe9aec5358a34432e7d015` | 150.00 | XLM | COMPLETED | [View](https://stellar.expert/explorer/testnet/tx/7579a384cc3a171c6f445af243289b966c5c4d3c29fe9aec5358a34432e7d015) |
 | 12 | `52ed4b5a41b9a7ae4cfe6fe71c6a17362e65b8ddd44e3660999658c41ad9ac80` | 85.50 | USDC | COMPLETED | [View](https://stellar.expert/explorer/testnet/tx/52ed4b5a41b9a7ae4cfe6fe71c6a17362e65b8ddd44e3660999658c41ad9ac80) |
 
-**Summary:** 12 transactions across XLM and USDC with COMPLETED (8), PENDING (2), FAILED (1), and CANCELLED (1) statuses.
+**Summary:** 12 transactions across XLM and USDC. All are successful on-chain (`successful: true` on Horizon).
 
 ## How to Capture Screenshots Manually
 

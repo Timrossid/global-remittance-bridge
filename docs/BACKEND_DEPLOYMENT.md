@@ -24,6 +24,7 @@ The following are already set in `render.yaml` / `railway.toml`:
 | `STELLAR_NETWORK` | `testnet` |
 | `SOROBAN_RPC_URL` | `https://soroban-testnet.stellar.org` |
 | `SOROBAN_CONTRACT_ID` | `CBL3I4IDMIUZJEJG56DV2VP6K7L2ROLT3JYCC53KNU7PPUX6DGPJJVKC` |
+| `SETTLEMENT_CONTRACT_ID` | `CBBH6JHHNKAC4E444EIYG3HGNPYLVFLY72OMRYCCLFZU4ASVU3AO73QR` |
 
 ---
 
