@@ -13,6 +13,7 @@ export class NotificationService {
   }
 
   async sendWebhook(url: string, payload: any) {
+    void payload;
     console.log(`Triggering Webhook at ${url}`);
     return { success: true };
   }

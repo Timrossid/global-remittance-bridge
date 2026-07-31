@@ -65,7 +65,7 @@ The `/escrow` page provides a direct, user-initiated Stellar Testnet flow throug
 3. The dashboard builds and simulates `create_escrow(sender, receiver, token, amount)`.
 4. Freighter signs the prepared transaction; the browser submits it to Soroban RPC and polls for confirmation.
 
-The page cross-checks all escrow entry points against `contracts/escrow/src/lib.rs`: `create_escrow` is exposed for the connected sender, while `release_funds` and `refund_funds` remain marked as admin-only flows and are not exposed as arbitrary browser actions. Private keys never enter the dashboard. Use Testnet assets only.
+The page cross-checks all escrow entry points against `contracts/escrow/src/lib.rs`: `initialize` and `transfer_admin` are deployment/recovery actions, `create_escrow` is exposed for the connected sender, and `release_funds`/`refund_funds` require the persisted administrator and are not exposed as arbitrary browser actions. Private keys never enter the dashboard. Use Testnet assets only. The published Testnet contract IDs predate the persisted-admin hardening and must be redeployed and initialized before relying on it. CI verifies the connection/UI path with a non-production mock; live transaction execution still requires manual Freighter/Testnet verification.
 
 ## 🎨 Design Philosophy
 

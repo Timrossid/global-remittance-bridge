@@ -1,14 +1,31 @@
 # 🔒 Escrow Contract Documentation
 
-The `EscrowContract` is a secure vault that facilitates trustless cross-border payments by holding funds in escrow until specific conditions are met.
+The `EscrowContract` is a Soroban vault that holds funds until an explicitly persisted administrator releases or refunds them. The contract keeps its instance entry alive with a bounded TTL extension when the role is initialized, rotated, or used. The contract is not trustless governance: the administrator is a privileged role and must be initialized, protected, rotated, and monitored before production use.
 
 ## 📋 Contract Overview
 
-- **Purpose:** Securely hold funds from a sender and release them to a receiver or refund them to the sender.
+- **Purpose:** Hold funds from a sender and release or refund them under a persisted, authenticated administrator role.
 - **Platform:** Stellar Soroban
 - **Language:** Rust
 
 ## 🛠️ Function Reference
+
+### `initialize`
+
+Sets the administrator once after deployment. The address must authenticate, and a second initialization attempt fails.
+
+| Parameter | Type | Description |
+| :--- | :--- | :--- |
+| `admin` | `Address` | Initial administrator for release, refund, and admin rotation. |
+
+### `transfer_admin`
+
+Rotates the persisted administrator. Both the current administrator and the replacement administrator must authenticate, preventing an accidental transfer to an unacknowledged address.
+
+| Parameter | Type | Description |
+| :--- | :--- | :--- |
+| `current_admin` | `Address` | Existing persisted administrator. |
+| `new_admin` | `Address` | Replacement administrator. |
 
 ### `create_escrow`
 
@@ -23,7 +40,7 @@ Creates a new escrow instance and locks the specified amount of tokens.
 
 **Returns:** `u64` (The unique Escrow ID)
 
-**Authorization:** Requires `sender` authorization.
+**Authorization:** Requires `sender` authorization. The contract must already be initialized with `initialize(admin)`; otherwise the call is rejected before token transfer.
 
 ---
 
@@ -36,7 +53,7 @@ Releases the escrowed funds to the designated receiver.
 | `admin` | `Address` | The administrative account authorized to release funds. |
 | `escrow_id` | `u64` | The unique ID of the escrow instance. |
 
-**Authorization:** Requires `admin` authorization.
+**Authorization:** Requires `admin` authorization and equality with the persisted administrator configured by `initialize`.
 
 ---
 
@@ -49,7 +66,7 @@ Returns the escrowed funds back to the original sender.
 | `admin` | `Address` | The administrative account authorized to refund funds. |
 | `escrow_id` | `u64` | The unique ID of the escrow instance. |
 
-**Authorization:** Requires `admin` authorization.
+**Authorization:** Requires `admin` authorization and equality with the persisted administrator configured by `initialize`.
 
 ## 🔄 State Machine
 

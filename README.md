@@ -201,13 +201,19 @@ All protected endpoints require `Authorization: Bearer <token>`.
 ### Escrow Contract (`contracts/escrow`)
 
 ```rust
+// Initialize the one-time persisted administrator
+initialize(admin)
+
+// Rotate the persisted administrator (current admin must authenticate)
+transfer_admin(current_admin, new_admin)
+
 // Create a new escrow — locks tokens until released or refunded
 create_escrow(sender, receiver, token, amount) -> escrow_id
 
-// Release funds to receiver (requires auth from the supplied admin address)
+// Release funds to receiver (requires the persisted admin)
 release_funds(admin, escrow_id)
 
-// Refund to original sender (requires auth from the supplied admin address)
+// Refund to original sender (requires the persisted admin)
 refund_funds(admin, escrow_id)
 ```
 
@@ -274,7 +280,7 @@ sequenceDiagram
     A-->>D: Show payment and settlement status
 ```
 
-For the component rationale and data-flow notes, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). The Mermaid diagrams above are the current architecture diagrams; [docs/ARCHITECTURE_DIAGRAMS.md](docs/ARCHITECTURE_DIAGRAMS.md) is currently a placeholder for expanded diagram documentation.
+For component rationale and data-flow notes, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). The concrete trust-boundary, payment-sequence, administrative-lifecycle, and deployment-promotion diagrams are maintained in [docs/ARCHITECTURE_DIAGRAMS.md](docs/ARCHITECTURE_DIAGRAMS.md).
 
 ---
 
@@ -284,7 +290,7 @@ The contracts below are deployed and publicly inspectable on **Stellar Testnet**
 
 | Contract | Network | Contract ID | Explorer |
 |---|---|---|---|
-| Escrow | Stellar Testnet | `CBL3I4IDMIUZJEJG56DV2VP6K7L2ROLT3JYCC53KNU7PPUX6DGPJJVKC` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CBL3I4IDMIUZJEJG56DV2VP6K7L2ROLT3JYCC53KNU7PPUX6DGPJJVKC) |
+| Escrow | Stellar Testnet (pre-hardening) | `CBL3I4IDMIUZJEJG56DV2VP6K7L2ROLT3JYCC53KNU7PPUX6DGPJJVKC` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CBL3I4IDMIUZJEJG56DV2VP6K7L2ROLT3JYCC53KNU7PPUX6DGPJJVKC) |
 | Settlement | Stellar Testnet | `CBBH6JHHNKAC4E444EIYG3HGNPYLVFLY72OMRYCCLFZU4ASVU3AO73QR` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CBBH6JHHNKAC4E444EIYG3HGNPYLVFLY72OMRYCCLFZU4ASVU3AO73QR) |
 
 ### Deployed contract proof
@@ -295,7 +301,7 @@ The following screenshot shows the deployed escrow contract on the Stellar Testn
 
 ### Contract responsibilities
 
-- **Escrow:** `create_escrow` transfers tokens into the contract and records sender, receiver, token, amount, and status. `release_funds` and `refund_funds` transition a pending escrow to released or refunded. The current implementation requires authentication from the supplied `admin` address, but does not yet persist and compare that address against an authorized admin role; this is a known hardening item before Mainnet.
+- **Escrow:** `initialize(admin)` now persists a one-time administrator in instance storage and maintains its TTL when the role is initialized, rotated, or used. `transfer_admin` requires both old and new administrator authentication. `create_escrow` requires initialization before transferring tokens, then records sender, receiver, token, amount, and status. `release_funds` and `refund_funds` require both authentication and equality with the persisted admin role. The published Testnet IDs above predate this hardening and must be redeployed and initialized before using the hardened escrow behavior.
 - **Settlement:** `process_settlement` transfers the net amount to the merchant and the 50-basis-point (0.5%) fee to the treasury. `initialize` and `distribute_fees` provide administrative state and fee distribution controls.
 - **Verification:** Testnet transaction evidence is listed in [`screenshots/DEMO_SUBMISSION_NOTES.md`](screenshots/DEMO_SUBMISSION_NOTES.md), including 12 successful Stellar Testnet transaction hashes. These demonstrate wallet activity and are not all limited to the two application contracts.
 
@@ -459,19 +465,99 @@ The merchant dashboard now includes a direct, user-initiated Testnet integration
 
 ### CI/CD assessment — **substantially covered**
 
-- **Smart contract tests and CI:** `contracts/escrow/src/test.rs` and `contracts/settlement/src/test.rs` provide six meaningful Soroban unit tests covering token locking, release/refund state transitions, settlement fee splitting, one-time initialization, admin checks, and invalid amounts. `.github/workflows/soroban.yml` runs formatting, WASM-target checks, `cargo test --workspace`, Clippy, and `stellar contract build` on contract changes and manual runs.
-- **Frontend/API CI:** `.github/workflows/test.yml` runs three isolated Payment API RPC unit tests through Jest and a Playwright Chromium smoke test for the dashboard login flow. `.github/workflows/build.yml` continues to build both applications, while `lint.yml` runs their linters. The dashboard test starts a local Next.js server and does not require a wallet, database, or production API.
+- **Smart contract tests and CI:** `contracts/escrow/src/test.rs` and `contracts/settlement/src/test.rs` provide eleven meaningful Soroban unit tests covering token locking, release/refund state transitions, settlement fee splitting, one-time initialization, admin checks, and invalid amounts. `.github/workflows/soroban.yml` runs formatting, WASM-target checks, `cargo test --workspace`, Clippy, and `stellar contract build` on contract changes and manual runs.
+- **Frontend/API CI:** `.github/workflows/test.yml` runs three isolated Payment API RPC unit tests through Jest and three Playwright Chromium tests: dashboard login, authenticated escrow wallet connection, and a deterministic mocked Soroban flow covering transaction simulation, SDK assembly, Freighter signing handoff, submission, `NOT_FOUND` polling, and success rendering. The wallet/RPC seams are CI-only and non-production; no real funds or wallet extension are used. `.github/workflows/build.yml` continues to build both applications, while `lint.yml` runs their linters. The dashboard tests start a local Next.js server and do not require a wallet, database, or production API.
 - **Frontend CD:** `merchant-dashboard/.github/workflows/deploy.yml` deploys the dashboard to Vercel using repository secrets.
-- **Smart contract CD:** `.github/workflows/soroban.yml` exposes two manual options: `prepare_testnet` packages verified WASM artifacts for review, while `deploy_testnet` submits both contracts to Stellar Testnet only after the `stellar-testnet` GitHub Environment is approved. The deploy job requires the `STELLAR_TESTNET_DEPLOYER_SECRET` Environment secret, uses the fixed Testnet RPC and passphrase, and never runs on push or pull request events. Configure required reviewers in the GitHub Environment; merely naming an environment does not enforce approval.
+- **Smart contract CD:** `.github/workflows/soroban.yml` exposes two manual options: `prepare_testnet` packages verified WASM artifacts for review, while `deploy_testnet` submits both contracts to Stellar Testnet only after the `stellar-testnet` GitHub Environment is approved. The deploy job requires the public deployer key plus the `STELLAR_TESTNET_DEPLOYER_SECRET` Environment secret, uses the fixed Testnet RPC and passphrase, and never runs on push or pull request events. Configure required reviewers in the GitHub Environment; merely naming an environment does not enforce approval.
 
 ### Assessment conclusion
 
-The repository now demonstrates meaningful Soroban unit coverage, automated Rust/Soroban CI, isolated API tests, browser dashboard smoke coverage, frontend CD, and a manually triggered, Environment-gated Testnet contract deployment path. The current contract tests use Soroban’s `mock_all_auths()` for positive behavior tests; dedicated negative authorization tests and stronger persisted escrow role authorization remain production-hardening work. Other remaining gaps are broader browser wallet mocking/integration coverage, independent security review, expanded architecture documentation, and verified project-owned social handles. No Mainnet deployment is claimed.
+The repository now demonstrates meaningful Soroban unit coverage, persisted escrow administrator authorization with negative tests, isolated API tests, CI-only browser coverage for wallet connection plus mocked Soroban simulation/signing/submission/polling, frontend CD, concrete architecture diagrams, and a manually triggered, Environment-gated Testnet contract deployment path.
+The published Testnet contract IDs are pre-hardening and require redeployment/initialization before production-like testing. Remaining gaps are live Freighter/Testnet verification, independent security review, expanded role rotation/recovery design, and verified project-owned social handles. No Mainnet deployment is claimed.
+
+## ✅ Final Validation Commands and Results
+
+The following checks were run locally after the Soroban, API, dashboard, and CI updates. These commands are intended to be reproducible from a clean working tree with the required Rust and Node.js toolchains installed.
+
+### Soroban contracts
+
+```bash
+cd contracts
+cargo fmt --all -- --check
+cargo check --workspace --target wasm32v1-none
+cargo test --workspace
+cargo clippy --workspace --all-targets -- -D warnings
+stellar contract build
+```
+
+**Result:** all checks passed. The workspace produced **11 passing tests** (8 escrow and 3 settlement), with no Clippy warnings. Both optimized WASM artifacts built successfully.
+
+### Payment API
+
+```bash
+cd payment-api
+npm ci --ignore-scripts
+npm run typecheck
+npm test
+npm run build
+npm run lint
+```
+
+`npm run typecheck` and `npm run build` generate the Prisma Client before compiling, so clean installs do not depend on a previously generated local client.
+
+**Result:** all checks passed. Jest reported **3 passing tests**; Prisma validation/generation, TypeScript typechecking, NestJS build, and read-only ESLint all completed successfully.
+
+### Merchant dashboard
+
+For the deterministic mocked Playwright run, use these public, address-shaped CI fixtures. They are not a live token configuration: the test intercepts wallet/RPC behavior, does not require deployed token state or funds, and must not be used for a real Freighter submission.
+
+```bash
+cd merchant-dashboard
+npm ci
+export NEXT_PUBLIC_NETWORK=testnet
+export NEXT_PUBLIC_CONTRACT_ID=CBL3I4IDMIUZJEJG56DV2VP6K7L2ROLT3JYCC53KNU7PPUX6DGPJJVKC
+export NEXT_PUBLIC_ESCROW_TOKEN_ID=CBBH6JHHNKAC4E444EIYG3HGNPYLVFLY72OMRYCCLFZU4ASVU3AO73QR
+export NEXT_PUBLIC_ENABLE_TEST_WALLET_MOCK=true
+
+npx tsc --noEmit
+npm run lint
+npm run build
+
+# Headed Playwright run in a virtual display (Linux)
+xvfb-run -a npx playwright test --project=chromium --headed
+```
+
+The Playwright suite uses a CI-only mocked wallet and Soroban RPC seam; it does not use a Freighter extension, private key, database, deployed token state, or real funds. For a live Freighter/Testnet run, replace the fixture addresses with a currently deployed and initialized escrow contract plus a deployed Testnet token C-address, use a sender account funded with the required Testnet asset, and approve the wallet prompt yourself. The mocked escrow test covers simulation, SDK transaction assembly, signing handoff, submission, `NOT_FOUND` polling, and success rendering.
+
+**Result:** typecheck, lint, and production build passed. The headed Playwright suite reported **3 passing tests**: sign-in smoke coverage, mocked Testnet wallet connection, and the mocked Soroban escrow flow.
+
+### Repository consistency
+
+The YAML check below requires PyYAML to be available to Python (`python3 -m pip install pyyaml` if needed).
+
+```bash
+git diff --check
+python3 - <<'PY'
+import glob, yaml
+for path in sorted(
+    glob.glob('.github/workflows/*.yml')
+    + glob.glob('.github/workflows/*.yaml')
+    + glob.glob('merchant-dashboard/.github/workflows/*.yml')
+    + glob.glob('payment-api/.github/workflows/*.yml')
+):
+    with open(path) as workflow:
+        yaml.safe_load(workflow)
+    print(f'{path}: valid YAML')
+PY
+(cd contracts && cargo metadata --no-deps --format-version 1 >/dev/null)
+```
+
+**Result:** diff, workflow YAML, and Cargo metadata checks passed. Validation created no unexpected source changes.
 
 ## 🚀 Future Scope
 
 - Expand Rust unit and integration tests for escrow authorization, negative token amounts, role transitions, and deployment regression cases.
-- Add mocked Freighter/browser integration tests for the direct dashboard Soroban flow, including simulation, signing, submission, and polling.
+- Add a separate manual Freighter/Testnet verification run for the browser transaction flow; CI already covers deterministic mocked simulation, signing, submission, and polling.
 - Establish deployer rotation, approval, rollback, and contract-ID recording procedures around the Environment-gated Testnet deployment workflow before any Mainnet work.
 - Add separate Mainnet approvals and complete an independent security audit before any production deployment.
 - Add time locks, dispute resolution, role-based administration, stronger contract authorization, and event schemas for indexers.

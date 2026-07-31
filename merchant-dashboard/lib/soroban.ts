@@ -2,12 +2,17 @@
 
 import {
   Address,
+  Account,
   Contract,
+  FeeBumpTransaction,
   Networks,
+  SorobanDataBuilder,
+  Transaction,
   TransactionBuilder,
   nativeToScVal,
   rpc,
   scValToNative,
+  xdr,
 } from '@stellar/stellar-sdk';
 import {
   getAddress,
@@ -21,12 +26,28 @@ const DEFAULT_TESTNET_RPC_URL = 'https://soroban-testnet.stellar.org';
 export const TESTNET_RPC_URL = process.env.NEXT_PUBLIC_SOROBAN_RPC_URL || DEFAULT_TESTNET_RPC_URL;
 
 export const ESCROW_FUNCTIONS = {
+  initialize: 'initialize',
+  transferAdmin: 'transfer_admin',
   createEscrow: 'create_escrow',
   releaseFunds: 'release_funds',
   refundFunds: 'refund_funds',
 } as const;
 
 export const ESCROW_CONTRACT_CROSS_CHECK = [
+  {
+    source: 'contracts/escrow/src/lib.rs',
+    functionName: ESCROW_FUNCTIONS.initialize,
+    signature: 'initialize(admin)',
+    browserCallable: false,
+    note: 'One-time deployment setup; persists the release/refund administrator and is not a public browser action.',
+  },
+  {
+    source: 'contracts/escrow/src/lib.rs',
+    functionName: ESCROW_FUNCTIONS.transferAdmin,
+    signature: 'transfer_admin(current_admin, new_admin)',
+    browserCallable: false,
+    note: 'The current persisted admin may rotate control; keep this behind a reviewed recovery flow.',
+  },
   {
     source: 'contracts/escrow/src/lib.rs',
     functionName: ESCROW_FUNCTIONS.createEscrow,
@@ -39,14 +60,14 @@ export const ESCROW_CONTRACT_CROSS_CHECK = [
     functionName: ESCROW_FUNCTIONS.releaseFunds,
     signature: 'release_funds(admin, escrow_id)',
     browserCallable: false,
-    note: 'The supplied admin must authenticate; the current contract does not persist an admin role, so keep this behind a reviewed admin flow.',
+    note: 'The initialized contract admin must authenticate and match the persisted admin role; keep this behind a reviewed admin flow.',
   },
   {
     source: 'contracts/escrow/src/lib.rs',
     functionName: ESCROW_FUNCTIONS.refundFunds,
     signature: 'refund_funds(admin, escrow_id)',
     browserCallable: false,
-    note: 'The supplied admin must authenticate; the current contract does not persist an admin role, so keep this behind a reviewed admin flow.',
+    note: 'The initialized contract admin must authenticate and match the persisted admin role; keep this behind a reviewed admin flow.',
   },
 ] as const;
 
@@ -62,6 +83,68 @@ export interface EscrowCreateResult {
   hash: string;
   status: string;
   escrowId?: string;
+}
+
+export interface BrowserWalletTestMock {
+  address: string;
+  networkPassphrase: string;
+  signTransaction?: (
+    transactionXdr: string,
+    options: { address: string; networkPassphrase: string },
+  ) => Promise<{ signedTxXdr?: string; error?: { message?: string } }>;
+}
+
+export interface BrowserSorobanRpcMock {
+  getAccount: (address: string) => Promise<{ sequence: string }>;
+  simulateTransaction: (transactionXdr: string) => Promise<{
+    transactionDataXdr: string;
+    minResourceFee: string;
+    resultXdr: string;
+  }>;
+  sendTransaction: (transactionXdr: string) => Promise<{
+    status: 'PENDING' | 'ERROR';
+    hash: string;
+  }>;
+  getTransaction: (hash: string) => Promise<{
+    status: 'NOT_FOUND' | 'SUCCESS';
+    returnValueXdr?: string;
+  }>;
+}
+
+type SorobanSimulation = Awaited<ReturnType<rpc.Server['simulateTransaction']>>;
+type SorobanSubmission = Awaited<ReturnType<rpc.Server['sendTransaction']>>;
+
+type SorobanTransactionResult = {
+  status: 'NOT_FOUND' | 'SUCCESS' | 'FAILED';
+  returnValue?: xdr.ScVal;
+};
+
+interface SorobanRpcClient {
+  getAccount: (address: string) => Promise<Account>;
+  simulateTransaction: (transaction: Transaction) => Promise<SorobanSimulation>;
+  sendTransaction: (transaction: Transaction | FeeBumpTransaction) => Promise<Pick<SorobanSubmission, 'status' | 'hash'>>;
+  getTransaction: (hash: string) => Promise<SorobanTransactionResult>;
+}
+
+declare global {
+  interface Window {
+    __SOROBAN_TEST_WALLET__?: BrowserWalletTestMock;
+    __SOROBAN_TEST_RPC__?: BrowserSorobanRpcMock;
+    __SOROBAN_TEST_RPC_CALLS__?: string[];
+    __SOROBAN_TEST_SIGNED_XDR__?: () => string;
+    __SOROBAN_TEST_SUBMITTED_XDR__?: () => string;
+  }
+}
+
+function readBrowserWalletTestMock(): BrowserWalletTestMock | undefined {
+  if (
+    typeof window === 'undefined' ||
+    process.env.NODE_ENV === 'production' ||
+    process.env.NEXT_PUBLIC_ENABLE_TEST_WALLET_MOCK !== 'true'
+  ) {
+    return undefined;
+  }
+  return window.__SOROBAN_TEST_WALLET__;
 }
 
 function assertTestnetConfiguration() {
@@ -80,7 +163,91 @@ function readFreighterError(result: { error?: { message?: string } }) {
   return result.error?.message;
 }
 
+function readBrowserSorobanRpcMock(): BrowserSorobanRpcMock | undefined {
+  if (
+    typeof window === 'undefined' ||
+    process.env.NODE_ENV === 'production' ||
+    process.env.NEXT_PUBLIC_ENABLE_TEST_WALLET_MOCK !== 'true'
+  ) {
+    return undefined;
+  }
+  return window.__SOROBAN_TEST_RPC__;
+}
+
+function createSorobanRpcClient(): SorobanRpcClient {
+  const mock = readBrowserSorobanRpcMock();
+  if (!mock) {
+    const server = new rpc.Server(TESTNET_RPC_URL);
+    return {
+      getAccount: (address) => server.getAccount(address),
+      simulateTransaction: (transaction) => server.simulateTransaction(transaction),
+      sendTransaction: async (transaction) => {
+        const submission = await server.sendTransaction(transaction);
+        return { status: submission.status, hash: submission.hash };
+      },
+      getTransaction: async (hash) => {
+        const result = await server.getTransaction(hash);
+        return {
+          status: result.status,
+          returnValue: 'returnValue' in result ? result.returnValue : undefined,
+        };
+      },
+    };
+  }
+
+  return {
+    getAccount: async (address) => {
+      const account = await mock.getAccount(address);
+      return new Account(address, account.sequence);
+    },
+    simulateTransaction: async (transaction) => {
+      const simulation = await mock.simulateTransaction(transaction.toXDR());
+      return {
+        id: 'playwright-simulation',
+        latestLedger: 1,
+        events: [],
+        _parsed: true,
+        transactionData: new SorobanDataBuilder(simulation.transactionDataXdr),
+        minResourceFee: simulation.minResourceFee,
+        result: {
+          auth: [],
+          retval: xdr.ScVal.fromXDR(simulation.resultXdr, 'base64'),
+        },
+      };
+    },
+    sendTransaction: async (transaction) => {
+      const submission = await mock.sendTransaction(transaction.toXDR());
+      return { status: submission.status, hash: submission.hash };
+    },
+    getTransaction: async (hash) => {
+      const result = await mock.getTransaction(hash);
+      return {
+        status: result.status,
+        returnValue: result.returnValueXdr
+          ? xdr.ScVal.fromXDR(result.returnValueXdr, 'base64')
+          : undefined,
+      };
+    },
+  };
+}
+
+function readEscrowId(returnValue: unknown): string {
+  const scVal = typeof returnValue === 'string'
+    ? xdr.ScVal.fromXDR(returnValue, 'base64')
+    : returnValue;
+  const value = scValToNative(scVal as xdr.ScVal);
+  return typeof value === 'bigint' ? value.toString() : String(value);
+}
+
 async function connectFreighter(): Promise<{ address: string; networkPassphrase: string }> {
+  const testMock = readBrowserWalletTestMock();
+  if (testMock) {
+    if (testMock.networkPassphrase !== Networks.TESTNET) {
+      throw new Error('The test wallet is connected to a non-Testnet network.');
+    }
+    return testMock;
+  }
+
   const connection = await isConnected();
   if (connection.error) {
     throw new Error(readFreighterError(connection) || 'Freighter is not available. Install the Freighter wallet extension.');
@@ -132,7 +299,7 @@ export async function createEscrowFromBrowser(input: EscrowCreateInput): Promise
     throw new Error('The connected Freighter address does not match the selected sender.');
   }
 
-  const server = new rpc.Server(TESTNET_RPC_URL);
+  const server = createSorobanRpcClient();
   const sourceAccount = await server.getAccount(input.sender);
   const escrow = new Contract(input.contractId);
   const operation = escrow.call(
@@ -160,10 +327,17 @@ export async function createEscrowFromBrowser(input: EscrowCreateInput): Promise
   // The connected sender is the transaction invoker and satisfies the contract's
   // sender.require_auth() through the signed transaction envelope. A future
   // non-invoker admin flow must use Freighter signAuthEntry separately.
-  const signed = await signTransaction(preparedTransaction.toXDR(), {
-    address: wallet.address,
-    networkPassphrase: wallet.networkPassphrase,
-  });
+  const testMock = readBrowserWalletTestMock();
+  const preparedTransactionXdr = preparedTransaction.toXDR();
+  const signed = testMock?.signTransaction
+    ? await testMock.signTransaction(preparedTransactionXdr, {
+        address: wallet.address,
+        networkPassphrase: wallet.networkPassphrase,
+      })
+    : await signTransaction(preparedTransactionXdr, {
+        address: wallet.address,
+        networkPassphrase: wallet.networkPassphrase,
+      });
   if (signed.error || !signed.signedTxXdr) {
     throw new Error(readFreighterError(signed) || 'The wallet did not return a signed transaction.');
   }
@@ -186,8 +360,7 @@ export async function createEscrowFromBrowser(input: EscrowCreateInput): Promise
 
   let escrowId: string | undefined;
   if ('returnValue' in result && result.returnValue) {
-    const value = scValToNative(result.returnValue);
-    escrowId = typeof value === 'bigint' ? value.toString() : String(value);
+    escrowId = readEscrowId(result.returnValue);
   }
 
   return { hash: submission.hash, status: result.status, escrowId };

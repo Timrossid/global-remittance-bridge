@@ -4,8 +4,36 @@ use soroban_sdk::{contract, contractimpl, symbol_short, token, Address, Env};
 #[contract]
 pub struct EscrowContract;
 
+const INSTANCE_TTL_THRESHOLD: u32 = 1_000;
+const INSTANCE_TTL_EXTEND_TO: u32 = 100_000;
+const PERSISTENT_TTL_THRESHOLD: u32 = 1_000;
+const PERSISTENT_TTL_EXTEND_TO: u32 = 100_000;
+
 #[contractimpl]
 impl EscrowContract {
+    /// Sets the one-time administrator used for release and refund actions.
+    pub fn initialize(env: Env, admin: Address) {
+        if env.storage().instance().has(&symbol_short!("admin")) {
+            panic!("Already initialized");
+        }
+        admin.require_auth();
+        env.storage()
+            .instance()
+            .set(&symbol_short!("admin"), &admin);
+        Self::extend_instance_ttl(&env);
+    }
+
+    /// Transfers administrative control to a new address.
+    pub fn transfer_admin(env: Env, current_admin: Address, new_admin: Address) {
+        current_admin.require_auth();
+        Self::require_admin(&env, &current_admin);
+        new_admin.require_auth();
+        env.storage()
+            .instance()
+            .set(&symbol_short!("admin"), &new_admin);
+        Self::extend_instance_ttl(&env);
+    }
+
     /**
      * Creates a new escrow instance and locks the specified amount of tokens.
      */
@@ -17,6 +45,7 @@ impl EscrowContract {
         amount: i128,
     ) -> u64 {
         sender.require_auth();
+        Self::ensure_initialized(&env);
 
         // Transfer tokens from sender to the contract (this contract's address)
         let client = token::Client::new(&env, &token);
@@ -49,6 +78,8 @@ impl EscrowContract {
         env.storage()
             .persistent()
             .set(&(escrow_id, symbol_short!("status")), &0u32); // 0 = Pending
+        Self::extend_escrow_ttl(&env, escrow_id);
+        Self::extend_next_id_ttl(&env);
 
         escrow_id
     }
@@ -58,6 +89,8 @@ impl EscrowContract {
      */
     pub fn release_funds(env: Env, admin: Address, escrow_id: u64) {
         admin.require_auth();
+        Self::require_admin(&env, &admin);
+        Self::extend_escrow_ttl(&env, escrow_id);
 
         let status: u32 = env
             .storage()
@@ -100,6 +133,8 @@ impl EscrowContract {
      */
     pub fn refund_funds(env: Env, admin: Address, escrow_id: u64) {
         admin.require_auth();
+        Self::require_admin(&env, &admin);
+        Self::extend_escrow_ttl(&env, escrow_id);
 
         let status: u32 = env
             .storage()
@@ -135,6 +170,55 @@ impl EscrowContract {
         env.storage()
             .persistent()
             .set(&(escrow_id, symbol_short!("status")), &2u32); // 2 = Refunded
+    }
+
+    fn ensure_initialized(env: &Env) {
+        if !env.storage().instance().has(&symbol_short!("admin")) {
+            panic!("Contract not initialized — call initialize first");
+        }
+        Self::extend_instance_ttl(env);
+    }
+
+    fn require_admin(env: &Env, admin: &Address) {
+        Self::ensure_initialized(env);
+        let stored_admin: Address = env
+            .storage()
+            .instance()
+            .get(&symbol_short!("admin"))
+            .expect("Contract not initialized — call initialize first");
+        if admin != &stored_admin {
+            panic!("Unauthorized: caller is not the registered admin");
+        }
+    }
+
+    fn extend_instance_ttl(env: &Env) {
+        env.storage()
+            .instance()
+            .extend_ttl(INSTANCE_TTL_THRESHOLD, INSTANCE_TTL_EXTEND_TO);
+    }
+
+    fn extend_next_id_ttl(env: &Env) {
+        env.storage().persistent().extend_ttl(
+            &symbol_short!("next_id"),
+            PERSISTENT_TTL_THRESHOLD,
+            PERSISTENT_TTL_EXTEND_TO,
+        );
+    }
+
+    fn extend_escrow_ttl(env: &Env, escrow_id: u64) {
+        for field in [
+            symbol_short!("sender"),
+            symbol_short!("receiver"),
+            symbol_short!("token"),
+            symbol_short!("amount"),
+            symbol_short!("status"),
+        ] {
+            env.storage().persistent().extend_ttl(
+                &(escrow_id, field),
+                PERSISTENT_TTL_THRESHOLD,
+                PERSISTENT_TTL_EXTEND_TO,
+            );
+        }
     }
 }
 
