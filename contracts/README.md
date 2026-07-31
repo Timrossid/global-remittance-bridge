@@ -30,7 +30,7 @@ Manages the distribution of funds and fees.
 
 ### Building
 ```bash
-cargo build --target wasm32-unknown-unknown --release
+cargo build --target wasm32v1-none --release
 ```
 
 ### Testing
@@ -38,10 +38,12 @@ cargo build --target wasm32-unknown-unknown --release
 cargo test
 ```
 
+The workspace currently has no contract-specific Rust test modules, so this command is a smoke check for the workspace. Add unit and integration tests before Mainnet deployment.
+
 ### Deployment
 To deploy a contract to the testnet:
 ```bash
-soroban contract deploy --wasm target/wasm32-unknown-unknown/release/escrow.wasm --source GXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX --network testnet
+stellar contract deploy --wasm target/wasm32v1-none/release/escrow.wasm --source deployer --network testnet
 ```
 
 ## 🛡️ Security

@@ -1,10 +1,19 @@
 # Deployment Guide
 
+## Automated, approval-gated Testnet deployment
+
+The preferred reviewed path is `.github/workflows/soroban.yml`. Run the workflow manually with `deploy_testnet=true` after configuring the protected `stellar-testnet` GitHub Environment with required reviewers and these secrets:
+
+- `STELLAR_TESTNET_DEPLOYER_PUBLIC_KEY`: the deployer account's public `G...` key.
+- `STELLAR_TESTNET_DEPLOYER_SECRET`: the matching private signing key. The workflow passes it to Stellar CLI through `STELLAR_SIGN_WITH_KEY`; it is not placed in a command-line argument.
+
+The workflow first runs contract formatting, tests, Clippy, and WASM build, then deploys the exact uploaded artifacts only to Stellar Testnet. It validates and reports both returned contract C-addresses. Use `prepare_testnet=true` instead when an artifact-only review is desired. No Mainnet deployment is configured.
+
 ## 1. Deploy Soroban Contracts to Stellar Testnet
 
 ```bash
 # Install the Stellar CLI
-cargo install stellar-cli
+cargo install --locked stellar-cli --version 27.0.0
 
 # Generate and fund a deployer keypair on testnet
 stellar keys generate --global deployer --network testnet
@@ -14,7 +23,7 @@ stellar keys fund deployer --network testnet
 cd contracts/escrow
 stellar contract build
 stellar contract deploy \
-  --wasm target/wasm32-unknown-unknown/release/escrow.wasm \
+  --wasm target/wasm32v1-none/release/escrow.wasm \
   --source deployer \
   --network testnet
 # → Save the returned C... address as SOROBAN_CONTRACT_ID
@@ -23,7 +32,7 @@ stellar contract deploy \
 cd ../settlement
 stellar contract build
 stellar contract deploy \
-  --wasm target/wasm32-unknown-unknown/release/settlement.wasm \
+  --wasm target/wasm32v1-none/release/settlement.wasm \
   --source deployer \
   --network testnet
 ```

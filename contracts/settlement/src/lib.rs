@@ -1,5 +1,5 @@
 #![no_std]
-use soroban_sdk::{contract, contractimpl, Address, Env, symbol_short, token};
+use soroban_sdk::{contract, contractimpl, symbol_short, token, Address, Env};
 
 /// Protocol fee basis points: 50 = 0.5%
 const FEE_BPS: i128 = 50;
@@ -16,7 +16,9 @@ impl SettlementContract {
             panic!("Already initialized");
         }
         admin.require_auth();
-        env.storage().instance().set(&symbol_short!("admin"), &admin);
+        env.storage()
+            .instance()
+            .set(&symbol_short!("admin"), &admin);
     }
 
     /// Processes a merchant settlement, deducting the protocol fee.
@@ -54,9 +56,15 @@ impl SettlementContract {
         }
 
         // Persist last settlement data for off-chain indexers / view callers
-        env.storage().instance().set(&symbol_short!("last_amt"), &amount);
-        env.storage().instance().set(&symbol_short!("last_net"), &net);
-        env.storage().instance().set(&symbol_short!("last_fee"), &fee);
+        env.storage()
+            .instance()
+            .set(&symbol_short!("last_amt"), &amount);
+        env.storage()
+            .instance()
+            .set(&symbol_short!("last_net"), &net);
+        env.storage()
+            .instance()
+            .set(&symbol_short!("last_fee"), &fee);
     }
 
     /// Distributes protocol fees held by this contract to the treasury.
@@ -90,9 +98,21 @@ impl SettlementContract {
 
     /// Returns (gross_amount, net_amount, fee) from the last settlement.
     pub fn get_last_settlement(env: Env) -> (i128, i128, i128) {
-        let amount: i128 = env.storage().instance().get(&symbol_short!("last_amt")).unwrap_or(0);
-        let net: i128 = env.storage().instance().get(&symbol_short!("last_net")).unwrap_or(0);
-        let fee: i128 = env.storage().instance().get(&symbol_short!("last_fee")).unwrap_or(0);
+        let amount: i128 = env
+            .storage()
+            .instance()
+            .get(&symbol_short!("last_amt"))
+            .unwrap_or(0);
+        let net: i128 = env
+            .storage()
+            .instance()
+            .get(&symbol_short!("last_net"))
+            .unwrap_or(0);
+        let fee: i128 = env
+            .storage()
+            .instance()
+            .get(&symbol_short!("last_fee"))
+            .unwrap_or(0);
         (amount, net, fee)
     }
 
@@ -101,3 +121,6 @@ impl SettlementContract {
         FEE_BPS
     }
 }
+
+#[cfg(test)]
+mod test;

@@ -2,6 +2,16 @@
 
 An open-source infrastructure enabling Small and Medium Enterprises (SMEs) to receive affordable, instant international payments via the **Stellar network** and **Soroban smart contracts**. No bank account required.
 
+## 📌 Project Description
+
+The **Global Micro-Remittance Bridge** is a Stellar-based payment platform for merchants that need to receive cross-border funds quickly and transparently. It combines a merchant dashboard, a NestJS payment API, Soroban escrow and settlement contracts, and blockchain indexing into one open-source reference implementation.
+
+The platform is designed around a simple flow: a merchant onboards with a Stellar wallet address, a payment is initiated through the API or dashboard, funds are represented and tracked on Stellar, and the settlement layer can distribute the merchant amount and protocol fee. The current public deployment is a **Stellar Testnet demonstration**; it is not a production Mainnet payment service.
+
+## 👁️ Project Vision
+
+Our vision is to make international commerce accessible to small businesses that are underserved by traditional banking rails. By combining Stellar's fast settlement with transparent Soroban logic and a focused merchant experience, the Bridge aims to reduce payment friction, make costs understandable, and give merchants verifiable ownership of their settlement history.
+
 ## 🔗 Live Links
 
 | Resource | URL |
@@ -18,8 +28,8 @@ An open-source infrastructure enabling Small and Medium Enterprises (SMEs) to re
 
 ## 🚀 Key Features
 
-- **Trustless Escrow** — Soroban smart contract holds funds until confirmed delivery; 0.5% protocol fee distributed automatically.
-- **Real-time Settlement** — Automated payouts to merchants via Stellar Horizon API.
+- **Trustless Escrow** — Soroban smart contract holds funds until confirmed delivery; the settlement path calculates a 0.5% protocol fee for the treasury.
+- **Real-time Settlement** — The Payment API submits and confirms Stellar/Soroban transactions while the indexer reconciles on-chain activity via Horizon.
 - **Merchant Dashboard** — Production Next.js portal with auth, transaction history, wallet view, settings, and user feedback collection.
 - **Submission Pack** — Screenshots, demo video notes, and feedback collection guidance are now documented in [screenshots/README.md](screenshots/README.md).
 - **REST API** — NestJS backend with JWT authentication, Prisma ORM, and full CRUD for merchants and transactions.
@@ -34,7 +44,9 @@ An open-source infrastructure enabling Small and Medium Enterprises (SMEs) to re
 global-remittance-bridge/
 ├── contracts/
 │   ├── escrow/          # Soroban escrow contract (Rust) — creates/releases/refunds escrows
+│   │   └── src/test.rs  # token transfer and state-transition tests
 │   └── settlement/      # Soroban settlement contract (Rust) — processes payouts with fee distribution
+│       └── src/test.rs  # fee, admin, and validation tests
 ├── payment-api/         # NestJS REST API — auth, merchants, payments, Stellar integration
 ├── merchant-dashboard/  # Next.js 14 merchant portal — dashboard, transactions, wallet, settings
 ├── transaction-indexer/ # Stellar event monitor and DB synchronizer
@@ -93,7 +105,7 @@ stellar contract build
 
 # Deploy the escrow contract
 stellar contract deploy \
-  --wasm target/wasm32-unknown-unknown/release/escrow.wasm \
+  --wasm target/wasm32v1-none/release/escrow.wasm \
   --source deployer \
   --network testnet
 # → Copy the returned contract address (C...) — you'll need it below
@@ -102,7 +114,7 @@ stellar contract deploy \
 cd ../settlement
 stellar contract build
 stellar contract deploy \
-  --wasm target/wasm32-unknown-unknown/release/settlement.wasm \
+  --wasm target/wasm32v1-none/release/settlement.wasm \
   --source deployer \
   --network testnet
 # → Copy this contract address too
@@ -128,6 +140,8 @@ cd ../merchant-dashboard
 cp .env.example .env.local
 # Edit .env.local: set NEXT_PUBLIC_API_URL=http://localhost:3001
 #                  set NEXT_PUBLIC_CONTRACT_ID=<your C... address>
+#                  set NEXT_PUBLIC_SOROBAN_RPC_URL=https://soroban-testnet.stellar.org
+#                  set NEXT_PUBLIC_ESCROW_TOKEN_ID=<Testnet token C... address>
 
 npm install
 npm run dev
@@ -190,10 +204,10 @@ All protected endpoints require `Authorization: Bearer <token>`.
 // Create a new escrow — locks tokens until released or refunded
 create_escrow(sender, receiver, token, amount) -> escrow_id
 
-// Release funds to receiver (admin only)
+// Release funds to receiver (requires auth from the supplied admin address)
 release_funds(admin, escrow_id)
 
-// Refund to original sender (admin only)
+// Refund to original sender (requires auth from the supplied admin address)
 refund_funds(admin, escrow_id)
 ```
 
@@ -218,24 +232,72 @@ get_fee_bps() -> i128
 
 ## 🏗️ Architecture
 
-```
-Customer Browser / SDK
-        │
-        ▼
-Payment API (NestJS) ─────────── Soroban RPC (testnet)
-        │                                │
-        ├─ auth (JWT)                    │
-        ├─ merchants                     ▼
-        ├─ payments ─────────── Escrow Contract
-        └─ notifications         Settlement Contract
-        │
-        ▼
-PostgreSQL (Supabase) ◄─── Transaction Indexer
-                                    │
-                            Stellar Horizon API
+The system is split into an off-chain application layer and an on-chain settlement layer:
+
+```mermaid
+flowchart LR
+    U[Customer / Merchant] --> D[Merchant Dashboard<br/>Next.js]
+    D --> A[Payment API<br/>NestJS + Prisma]
+    A --> R[Soroban RPC]
+    R --> E[Escrow Contract]
+    R --> S[Settlement Contract]
+    A --> DB[(PostgreSQL)]
+    I[Transaction Indexer] --> H[Stellar Horizon]
+    H --> DB
+    A --> N[Notifications]
+    A --> X[Anchor Adapter]
 ```
 
+### Payment and settlement flow
+
+```mermaid
+sequenceDiagram
+    participant M as Merchant
+    participant D as Dashboard / SDK
+    participant A as Payment API
+    participant R as Soroban RPC
+    participant E as Escrow Contract
+    participant S as Settlement Contract
+    participant I as Transaction Indexer
+    participant X as Stellar Horizon
+    participant H as Merchant Wallet
+
+    M->>D: Register and provide Stellar wallet
+    D->>A: Authenticate and create payment
+    A->>R: Simulate and submit Soroban transaction
+    R->>E: Lock funds in escrow
+    I->>X: Observe Stellar transaction through Horizon
+    A->>S: Process settlement when conditions are met
+    S->>H: Transfer net amount
+    S->>S: Account for 0.5% protocol fee
+    I->>A: Persist on-chain status
+    A-->>D: Show payment and settlement status
+```
+
+For the component rationale and data-flow notes, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). The Mermaid diagrams above are the current architecture diagrams; [docs/ARCHITECTURE_DIAGRAMS.md](docs/ARCHITECTURE_DIAGRAMS.md) is currently a placeholder for expanded diagram documentation.
+
 ---
+
+## 🌐 Mainnet / Testnet Contract Details
+
+The contracts below are deployed and publicly inspectable on **Stellar Testnet**. There are currently **no Mainnet contract IDs** for this project, and the Testnet deployments must not be treated as production Mainnet deployments.
+
+| Contract | Network | Contract ID | Explorer |
+|---|---|---|---|
+| Escrow | Stellar Testnet | `CBL3I4IDMIUZJEJG56DV2VP6K7L2ROLT3JYCC53KNU7PPUX6DGPJJVKC` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CBL3I4IDMIUZJEJG56DV2VP6K7L2ROLT3JYCC53KNU7PPUX6DGPJJVKC) |
+| Settlement | Stellar Testnet | `CBBH6JHHNKAC4E444EIYG3HGNPYLVFLY72OMRYCCLFZU4ASVU3AO73QR` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CBBH6JHHNKAC4E444EIYG3HGNPYLVFLY72OMRYCCLFZU4ASVU3AO73QR) |
+
+### Deployed contract proof
+
+The following screenshot shows the deployed escrow contract on the Stellar Testnet block explorer. The original asset is available at [`screenshots/contract-deployed.png`](screenshots/contract-deployed.png).
+
+![Escrow contract deployed on Stellar Testnet](screenshots/contract-deployed.png)
+
+### Contract responsibilities
+
+- **Escrow:** `create_escrow` transfers tokens into the contract and records sender, receiver, token, amount, and status. `release_funds` and `refund_funds` transition a pending escrow to released or refunded. The current implementation requires authentication from the supplied `admin` address, but does not yet persist and compare that address against an authorized admin role; this is a known hardening item before Mainnet.
+- **Settlement:** `process_settlement` transfers the net amount to the merchant and the 50-basis-point (0.5%) fee to the treasury. `initialize` and `distribute_fees` provide administrative state and fee distribution controls.
+- **Verification:** Testnet transaction evidence is listed in [`screenshots/DEMO_SUBMISSION_NOTES.md`](screenshots/DEMO_SUBMISSION_NOTES.md), including 12 successful Stellar Testnet transaction hashes. These demonstrate wallet activity and are not all limited to the two application contracts.
 
 ## 🚢 Deployment
 
@@ -255,6 +317,15 @@ PostgreSQL (Supabase) ◄─── Transaction Indexer
 3. Build command: `npm run build`
 4. Start command: `npm run start:prod`
 5. Run migrations: `npx prisma migrate deploy`
+
+### Smart contracts (GitHub Actions, Testnet only)
+
+Run `.github/workflows/soroban.yml` manually with `deploy_testnet=true` after configuring the protected `stellar-testnet` GitHub Environment. The Environment must contain:
+
+- `STELLAR_TESTNET_DEPLOYER_PUBLIC_KEY` — the public `G...` account used as the transaction source.
+- `STELLAR_TESTNET_DEPLOYER_SECRET` — the matching private signing key, exposed only to the approved deployment job through Stellar CLI’s `STELLAR_SIGN_WITH_KEY` environment variable.
+
+The job runs the verified contract CI first, downloads the exact WASM artifacts from that run, submits only to Stellar Testnet, validates the returned contract C-addresses, and writes them to the workflow summary. Configure required reviewers in the Environment; a workflow `environment` declaration alone does not create an approval gate. Never use this path with Mainnet credentials.
 
 ---
 
@@ -302,11 +373,38 @@ build, and the action items currently in flight.
 
 ---
 
-## 🤝 User Onboarding
+## 🤝 User Onboarding Details
 
-Users can register at the live demo URL, connect their Stellar wallet address, and start receiving payments immediately on testnet.
+### For merchants using the live demo
 
-For proof of wallet interactions, see the [screenshots/](screenshots/) directory and the Stellar testnet contract explorer.
+1. Open the [Merchant Dashboard](https://merchant-dashboard-rosy.vercel.app).
+2. Select **Register** and provide a business name, email, password, and Stellar wallet address.
+3. Sign in after registration if the session has expired.
+4. Review the dashboard, transactions, wallet, analytics, and feedback pages.
+5. Use the Testnet explorer links above to independently inspect contract and transaction activity.
+
+### For developers running locally
+
+1. Clone the repository and install the prerequisites described in [Quick Start](#-quick-start).
+2. Configure the Payment API with database, JWT, Stellar, Soroban RPC, and contract environment variables.
+3. Configure the dashboard with `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_NETWORK=testnet`, and the escrow `NEXT_PUBLIC_CONTRACT_ID`.
+4. Start the API and dashboard, then register a test merchant using a new Stellar-style wallet address.
+5. Use only test credentials and testnet assets while evaluating the project. Do not submit production secrets or real funds.
+
+The onboarding flow is intentionally wallet-address based in this demonstration. Production onboarding would require a complete, jurisdiction-aware KYC/AML and custody model before Mainnet use.
+
+For proof of wallet interactions, see the [screenshots/](screenshots/) directory and the Stellar Testnet contract explorer.
+
+---
+
+## 📣 Social and Community Links
+
+- [GitHub repository](https://github.com/Timrossid/global-remittance-bridge) — source code, issues, and discussions.
+- [GitHub organization profile](https://github.com/Global-Micro-Remittance-Bridge) — related project repositories and community documentation.
+- [Stellar Developer Documentation](https://developers.stellar.org/docs) — platform documentation for contributors.
+- [Stellar Testnet Explorer](https://stellar.expert/explorer/testnet) — public on-chain verification.
+
+**Submission gap:** no project-owned X/Twitter, Discord, Telegram, or LinkedIn handle is published in this repository. The links above are verified project and platform URLs, not substitutes for unavailable social handles; add official accounts here when they are created and verified.
 
 ---
 
@@ -321,6 +419,66 @@ See the [screenshots/](screenshots/) directory for:
 - Proof of 12 verified Stellar testnet wallet interactions (all successful on-chain)
 
 ---
+
+## 🔍 AI Assessment and Validation Status
+
+This section records the repository assessment requested for Levels 4–7. It is deliberately explicit about what is present and what remains to be added.
+
+### Smart contract folder structure — **validated**
+
+A valid Soroban workspace is present:
+
+```text
+contracts/
+├── Cargo.toml                 # Rust workspace: escrow + settlement
+├── Cargo.lock                 # locked dependency graph
+├── escrow/
+│   ├── Cargo.toml
+│   └── src/
+│       ├── lib.rs             # EscrowContract
+│       └── test.rs            # token and state-transition tests
+└── settlement/
+    ├── Cargo.toml
+    └── src/
+        ├── lib.rs             # SettlementContract
+        └── test.rs            # fee, admin, and validation tests
+```
+
+Both contracts use `#![no_std]`, `soroban-sdk`, `#[contract]`, and `#[contractimpl]`. The implementation contains project-specific payment logic rather than a boilerplate Hello World contract.
+
+### Smart contract code — **validated**
+
+- `escrow/src/lib.rs` implements token transfers, escrow creation, persistent state, release, refund, and a pending/released/refunded state machine.
+- `settlement/src/lib.rs` implements initialization, positive-amount checks, merchant/treasury fee distribution, last-settlement state, and a 50 bps fee accessor.
+
+### Application integration — **partially validated**
+
+The backend contains the live integration path: `payment-api/src/common/stellar.service.ts` imports `@stellar/stellar-sdk`; `payment-api/src/common/soroban.service.ts` wraps Soroban JSON-RPC; and `payment-api/src/payments/payment.service.ts` builds, simulates, submits, and confirms a Soroban escrow transaction using `SOROBAN_CONTRACT_ID`.
+
+The merchant dashboard now includes a direct, user-initiated Testnet integration at `/escrow`: `merchant-dashboard/lib/soroban.ts` uses `@stellar/stellar-sdk` for contract-call XDR, Soroban RPC simulation/assembly/submission, and `@stellar/freighter-api` for wallet access and signing. The `/escrow` page maps `create_escrow(sender, receiver, token, amount)` to the connected wallet and visibly cross-checks `release_funds(admin, escrow_id)` and `refund_funds(admin, escrow_id)` as protected admin flows that are not exposed as arbitrary browser actions. The backend API remains the integration layer for its existing server-side payment flow; the browser flow never handles private keys and is restricted to Stellar Testnet.
+
+### CI/CD assessment — **substantially covered**
+
+- **Smart contract tests and CI:** `contracts/escrow/src/test.rs` and `contracts/settlement/src/test.rs` provide six meaningful Soroban unit tests covering token locking, release/refund state transitions, settlement fee splitting, one-time initialization, admin checks, and invalid amounts. `.github/workflows/soroban.yml` runs formatting, WASM-target checks, `cargo test --workspace`, Clippy, and `stellar contract build` on contract changes and manual runs.
+- **Frontend/API CI:** `.github/workflows/test.yml` runs three isolated Payment API RPC unit tests through Jest and a Playwright Chromium smoke test for the dashboard login flow. `.github/workflows/build.yml` continues to build both applications, while `lint.yml` runs their linters. The dashboard test starts a local Next.js server and does not require a wallet, database, or production API.
+- **Frontend CD:** `merchant-dashboard/.github/workflows/deploy.yml` deploys the dashboard to Vercel using repository secrets.
+- **Smart contract CD:** `.github/workflows/soroban.yml` exposes two manual options: `prepare_testnet` packages verified WASM artifacts for review, while `deploy_testnet` submits both contracts to Stellar Testnet only after the `stellar-testnet` GitHub Environment is approved. The deploy job requires the `STELLAR_TESTNET_DEPLOYER_SECRET` Environment secret, uses the fixed Testnet RPC and passphrase, and never runs on push or pull request events. Configure required reviewers in the GitHub Environment; merely naming an environment does not enforce approval.
+
+### Assessment conclusion
+
+The repository now demonstrates meaningful Soroban unit coverage, automated Rust/Soroban CI, isolated API tests, browser dashboard smoke coverage, frontend CD, and a manually triggered, Environment-gated Testnet contract deployment path. The current contract tests use Soroban’s `mock_all_auths()` for positive behavior tests; dedicated negative authorization tests and stronger persisted escrow role authorization remain production-hardening work. Other remaining gaps are broader browser wallet mocking/integration coverage, independent security review, expanded architecture documentation, and verified project-owned social handles. No Mainnet deployment is claimed.
+
+## 🚀 Future Scope
+
+- Expand Rust unit and integration tests for escrow authorization, negative token amounts, role transitions, and deployment regression cases.
+- Add mocked Freighter/browser integration tests for the direct dashboard Soroban flow, including simulation, signing, submission, and polling.
+- Establish deployer rotation, approval, rollback, and contract-ID recording procedures around the Environment-gated Testnet deployment workflow before any Mainnet work.
+- Add separate Mainnet approvals and complete an independent security audit before any production deployment.
+- Add time locks, dispute resolution, role-based administration, stronger contract authorization, and event schemas for indexers.
+- Integrate multiple compliant Stellar anchors and expand supported currencies and corridors.
+- Improve direct wallet signing and browser-side transaction UX while keeping signing keys out of the backend.
+- Add production-grade KYC/AML controls, observability, rate limiting, disaster recovery, and a formal incident-response process.
+- Publish official project social/community handles and a versioned SDK once the public contributor community is established.
 
 ## 🤝 Contributing
 

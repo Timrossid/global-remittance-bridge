@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "playwright test",
     "demo:capture": "node scripts/capture-screenshots.mjs",
     "demo:record": "node scripts/record-demo.mjs",
     "demo:install-browser": "playwright install chromium",
@@ -14,6 +15,8 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.0",
+    "@stellar/freighter-api": "^6.0.1",
+    "@stellar/stellar-sdk": "^16.2.0",
     "@vercel/analytics": "^1.3.1",
     "clsx": "^2.0.0",
     "lucide-react": "^0.284.0",
@@ -27,13 +30,13 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",
-    "playwright": "^1.61.1",
     "@types/node": "^20.0.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "autoprefixer": "^10.4.14",
     "eslint": "^8.0.0",
     "eslint-config-next": "14.0.0",
+    "playwright": "^1.61.1",
     "postcss": "^8.4.0",
     "tailwindcss": "^3.3.0",
     "typescript": "^5.0.0"
