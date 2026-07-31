@@ -27,6 +27,12 @@ stellar contract deploy \
   --source deployer \
   --network testnet
 # → Save the returned C... address as SOROBAN_CONTRACT_ID
+# → After deployment, initialize the hardened escrow:
+stellar contract invoke \
+  --id <ESCROW_CONTRACT_ID> \
+  --source-account deployer \
+  --network testnet \
+  -- initialize --admin <DEPLOYER_PUBLIC_ADDRESS>
 
 # Build and deploy the settlement contract
 cd ../settlement

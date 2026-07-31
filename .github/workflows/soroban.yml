@@ -42,6 +42,10 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Install Stellar CLI system dependencies
+        run: sudo apt-get update && sudo apt-get install -y pkg-config libdbus-1-dev
+        working-directory: .
+
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -103,6 +107,10 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Install Stellar CLI system dependencies
+        run: sudo apt-get update && sudo apt-get install -y pkg-config libdbus-1-dev
+        working-directory: .
+
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
@@ -154,10 +162,24 @@ jobs:
 
           escrow_id="$(deploy escrow)"
           settlement_id="$(deploy settlement)"
+
+          echo "Initializing the hardened escrow administrator..." >&2
+          stellar contract invoke \
+            --id "$escrow_id" \
+            --source-account "$STELLAR_TESTNET_DEPLOYER_PUBLIC_KEY" \
+            --network testnet \
+            --rpc-url "$STELLAR_RPC_URL" \
+            --network-passphrase "$STELLAR_NETWORK_PASSPHRASE" \
+            -- \
+            initialize \
+            --admin "$STELLAR_TESTNET_DEPLOYER_PUBLIC_KEY"
+
           {
             echo "### Stellar Testnet deployment"
             echo "- Escrow contract: \\`${escrow_id}\\`"
             echo "- Settlement contract: \\`${settlement_id}\\`"
+            echo "- Escrow administrator: \\`${STELLAR_TESTNET_DEPLOYER_PUBLIC_KEY}\\`"
+            echo "- Escrow initialization: completed by this approved deployment job."
             echo "- Verify both returned C-addresses in Stellar Expert before updating application configuration."
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -175,6 +197,10 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
+      - name: Install Stellar CLI system dependencies
+        run: sudo apt-get update && sudo apt-get install -y pkg-config libdbus-1-dev
+        working-directory: .
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable

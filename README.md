@@ -473,11 +473,11 @@ The merchant dashboard now includes a direct, user-initiated Testnet integration
 ### Assessment conclusion
 
 The repository now demonstrates meaningful Soroban unit coverage, persisted escrow administrator authorization with negative tests, isolated API tests, CI-only browser coverage for wallet connection plus mocked Soroban simulation/signing/submission/polling, frontend CD, concrete architecture diagrams, and a manually triggered, Environment-gated Testnet contract deployment path.
-The published Testnet contract IDs are pre-hardening and require redeployment/initialization before production-like testing. Remaining gaps are live Freighter/Testnet verification, independent security review, expanded role rotation/recovery design, and verified project-owned social handles. No Mainnet deployment is claimed.
+The published Testnet contract IDs are pre-hardening and require redeployment/initialization before production-like testing. The redeploy, initialization, live Freighter verification, and evidence-capture procedure is documented in [`docs/LIVE_TESTNET_VERIFICATION.md`](docs/LIVE_TESTNET_VERIFICATION.md). Independent security review remains pending; its required scope and acceptance gates are documented in [`docs/SECURITY_REVIEW_SCOPE.md`](docs/SECURITY_REVIEW_SCOPE.md). No Mainnet deployment is claimed.
 
 ## ✅ Final Validation Commands and Results
 
-The following checks were run locally after the Soroban, API, dashboard, and CI updates. These commands are intended to be reproducible from a clean working tree with the required Rust and Node.js toolchains installed.
+The following checks were run locally after the Soroban, API, dashboard, and CI updates. These commands are intended to be reproducible from a clean working tree with the required Rust and Node.js toolchains installed. The repository also includes [`security.yml`](.github/workflows/security.yml) for Rust and Node dependency audits. Current scans still report high-severity dependency findings requiring staged framework migrations; the audit workflow is intentionally an honest release gate and is not a substitute for the independent review described in [`docs/SECURITY_REVIEW_SCOPE.md`](docs/SECURITY_REVIEW_SCOPE.md).
 
 ### Soroban contracts
 
@@ -509,14 +509,14 @@ npm run lint
 
 ### Merchant dashboard
 
-For the deterministic mocked Playwright run, use these public, address-shaped CI fixtures. They are not a live token configuration: the test intercepts wallet/RPC behavior, does not require deployed token state or funds, and must not be used for a real Freighter submission.
+For the deterministic mocked Playwright run, use these public CI fixtures. The token fixture below is the canonical Stellar Testnet native-XLM Asset Contract; the test still intercepts wallet/RPC behavior, does not require deployed token state or funds, and must not be used for a real Freighter submission.
 
 ```bash
 cd merchant-dashboard
 npm ci
 export NEXT_PUBLIC_NETWORK=testnet
 export NEXT_PUBLIC_CONTRACT_ID=CBL3I4IDMIUZJEJG56DV2VP6K7L2ROLT3JYCC53KNU7PPUX6DGPJJVKC
-export NEXT_PUBLIC_ESCROW_TOKEN_ID=CBBH6JHHNKAC4E444EIYG3HGNPYLVFLY72OMRYCCLFZU4ASVU3AO73QR
+export NEXT_PUBLIC_ESCROW_TOKEN_ID=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC
 export NEXT_PUBLIC_ENABLE_TEST_WALLET_MOCK=true
 
 npx tsc --noEmit

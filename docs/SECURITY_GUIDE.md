@@ -67,6 +67,8 @@ npx playwright test
 
 The dashboard CI tests use deliberately scoped, non-production Testnet seams: one verifies authenticated `/escrow` wallet connection and function cross-check rendering, while the full-flow case mocks the Soroban RPC wire boundary and Freighter signing handoff. It exercises real SDK transaction construction, simulation assembly, signed-XDR parsing, submission, `NOT_FOUND` polling, and success rendering without a browser extension or real funds. It does not replace a manual Freighter/Testnet transaction check or an independent live RPC integration test.
 
+The repository also runs automated dependency checks in `.github/workflows/security.yml`. Current npm scans report high-severity findings in dependency trees that require staged major-version migrations; these findings remain visible release blockers. Automated dependency scanning, Rust tests, and Clippy do not constitute the independent security review required by [`docs/SECURITY_REVIEW_SCOPE.md`](SECURITY_REVIEW_SCOPE.md).
+
 ## Pre-Mainnet gates
 
 These items must be completed and recorded separately before Mainnet:

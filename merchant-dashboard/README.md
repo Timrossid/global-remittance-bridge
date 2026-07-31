@@ -41,7 +41,7 @@ Copy `.env.example` to `.env` and fill in:
 - `NEXT_PUBLIC_NETWORK`: Stellar network (e.g., `testnet`).
 - `NEXT_PUBLIC_CONTRACT_ID`: The deployed address of the Escrow contract.
 - `NEXT_PUBLIC_SOROBAN_RPC_URL`: Soroban RPC endpoint used by the browser escrow flow (Testnet default: `https://soroban-testnet.stellar.org`).
-- `NEXT_PUBLIC_ESCROW_TOKEN_ID`: Testnet token contract C-address used by the browser escrow form.
+- `NEXT_PUBLIC_ESCROW_TOKEN_ID`: Testnet token contract C-address used by the browser escrow form. For a native-XLM smoke test, use `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC`.
 
 ### Running Locally
 
