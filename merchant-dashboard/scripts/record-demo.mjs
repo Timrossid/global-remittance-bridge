@@ -32,6 +32,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
+import { HYDRATION_PAUSE_MS } from './demo-shared.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
@@ -180,7 +181,7 @@ async function trySeededLogin(page) {
     // filling right after domcontentloaded can race Next.js hydration, which
     // resets the controlled inputs before submit and fails the login.
     await page.goto(`${BASE_URL}/login`, { waitUntil: 'networkidle', timeout: 60000 });
-    await page.waitForTimeout(1500);
+    await page.waitForTimeout(HYDRATION_PAUSE_MS);
     await page.fill('input[type="email"]', DEMO_CREDS.email);
     await page.fill('input[type="password"]', DEMO_CREDS.password);
     await page.click('button[type="submit"]');
