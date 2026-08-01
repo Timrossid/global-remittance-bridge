@@ -19,14 +19,22 @@ The preferred path is the manually triggered **Soroban Contracts** workflow:
 3. Add `STELLAR_TESTNET_DEPLOYER_SECRET` as the matching secret key in the protected Environment. Never place it in repository files or workflow arguments.
 4. Run the workflow with `deploy_testnet=true`.
 5. Approve the `stellar-testnet` Environment deployment.
-6. Confirm the workflow summary reports both contract C-addresses and that escrow initialization completed.
-7. Verify both C-addresses and the escrow `initialize` invocation in Stellar Expert.
+6. Confirm the workflow summary reports both contract C-addresses and that escrow and settlement initialization completed.
+7. Verify both C-addresses and the escrow and settlement `initialize` invocations in Stellar Expert.
 
-The workflow runs contract CI first, deploys the exact verified WASM artifacts, and initializes escrow with the deployer public address. If initializing manually instead, use the Stellar CLI from a trusted local shell:
+The workflow runs contract CI first, deploys the exact verified WASM artifacts, and initializes both escrow and settlement with the deployer public address. If initializing manually instead, use the Stellar CLI from a trusted local shell:
 
 ```bash
 stellar contract invoke \
   --id <NEW_ESCROW_CONTRACT_ID> \
+  --source-account <LOCAL_KEY_NAME> \
+  --network testnet \
+  -- \
+  initialize \
+  --admin <DEPLOYER_PUBLIC_ADDRESS>
+
+stellar contract invoke \
+  --id <NEW_SETTLEMENT_CONTRACT_ID> \
   --source-account <LOCAL_KEY_NAME> \
   --network testnet \
   -- \
@@ -74,6 +82,7 @@ Record the following in a private verification note or a review-safe artifact:
 - [ ] New escrow C-address and Stellar Expert link
 - [ ] Settlement C-address and Stellar Expert link
 - [ ] Escrow initialization transaction link
+- [ ] Settlement initialization transaction link
 - [ ] Live escrow transaction hash and Stellar Expert link
 - [ ] Returned escrow ID
 - [ ] Testnet network confirmation
