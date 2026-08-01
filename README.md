@@ -22,7 +22,7 @@ Our vision is to make international commerce accessible to small businesses that
 | **Stellar Testnet Explorer** | [https://stellar.expert/explorer/testnet](https://stellar.expert/explorer/testnet) |
 | **Escrow Contract** | [CD2YDPGFZCSXY3UAFJSO47GC5S3KDVECPL5SCCQQXIPTEBLDWMYPG44D](https://stellar.expert/explorer/testnet/contract/CD2YDPGFZCSXY3UAFJSO47GC5S3KDVECPL5SCCQQXIPTEBLDWMYPG44D) |
 | **Settlement Contract** | [CBWLHX2XDGIFERM5DL6WZM373DL77MFG4SDF6BTEXNP4ISHTJHZ4YQAP](https://stellar.expert/explorer/testnet/contract/CBWLHX2XDGIFERM5DL6WZM373DL77MFG4SDF6BTEXNP4ISHTJHZ4YQAP) |
-| **Demo Video** | ▶️ **[Watch on GitHub Releases (demo-recording-v1)](https://github.com/Timrossid/global-remittance-bridge/releases/tag/demo-recording-v1)** — 2-min walkthrough of register → dashboard → transactions → wallet → analytics → feedback. Direct download: [demo-recording.webm](https://github.com/Timrossid/global-remittance-bridge/releases/download/demo-recording-v1/demo-recording.webm). |
+| **Demo Video** | ▶️ **[Watch on GitHub Releases (demo-recording-v1)](https://github.com/Timrossid/global-remittance-bridge/releases/tag/demo-recording-v1)** — 2-min walkthrough of register → dashboard → transactions → wallet → analytics → feedback. Direct downloads: [demo-recording.mp4](https://github.com/Timrossid/global-remittance-bridge/releases/download/demo-recording-v1/demo-recording.mp4) (H.264 · broadest compatibility) · [demo-recording.webm](https://github.com/Timrossid/global-remittance-bridge/releases/download/demo-recording-v1/demo-recording.webm). |
 
 ---
 
@@ -345,12 +345,11 @@ The job runs the verified contract CI first, downloads the exact WASM artifacts 
 
 ## 🎬 Demo Video
 
-A 2-minute silent walkthrough of the live dashboard is published on the GitHub
-**Release [demo-recording-v1](https://github.com/Timrossid/global-remittance-bridge/releases/tag/demo-recording-v1)**,
-with the `.webm` attached as a release asset.
+A 2-minute silent walkthrough of the live dashboard is published on the GitHub**Release [demo-recording-v1](https://github.com/Timrossid/global-remittance-bridge/releases/tag/demo-recording-v1)**,  
+with both the `.webm` and an H.264 `.mp4` attached as release assets (the MP4 plays in virtually any browser/player).
 
 - 📺 View release: <https://github.com/Timrossid/global-remittance-bridge/releases/tag/demo-recording-v1>
-- ⬇️ Direct download: <https://github.com/Timrossid/global-remittance-bridge/releases/download/demo-recording-v1/demo-recording.webm>
+- ⬇️ Direct downloads: [demo-recording.mp4](https://github.com/Timrossid/global-remittance-bridge/releases/download/demo-recording-v1/demo-recording.mp4) (≈1.7 MB · H.264) · [demo-recording.webm](https://github.com/Timrossid/global-remittance-bridge/releases/download/demo-recording-v1/demo-recording.webm) (≈6.9 MB)
 
 The recording is reproducible from scratch:
 
