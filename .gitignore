@@ -32,6 +32,7 @@ out/
 # Lint configs
 .eslintrc.json
 !merchant-dashboard/.eslintrc.json
+!payment-api/.eslintrc.json
 
 # Other
 *.log
