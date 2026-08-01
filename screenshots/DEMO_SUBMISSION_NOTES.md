@@ -7,7 +7,7 @@
 - **Stellar Testnet Explorer:** https://stellar.expert/explorer/testnet
 - **Analytics Page:** https://merchant-dashboard-rosy.vercel.app/analytics
 - **Demo Video (hosted on GitHub):** ▶️ **[Release demo-recording-v1](https://github.com/Timrossid/global-remittance-bridge/releases/tag/demo-recording-v1)** — 2-min silent walkthrough attached as a release asset
-- **Demo Video (direct download):** [demo-recording.webm](https://github.com/Timrossid/global-remittance-bridge/releases/download/demo-recording-v1/demo-recording.webm) (≈3.6 MB · 1440×900 · WebM)
+- **Demo Video (direct download):** [demo-recording.webm](https://github.com/Timrossid/global-remittance-bridge/releases/download/demo-recording-v1/demo-recording.webm) (≈6.9 MB · 1440×900 · WebM)
 - **Demo Video (in repo):** [`screenshots/demo-recording.webm`](demo-recording.webm) — the source file attached to the release above
 
 ## Getting Started (For Testers)
@@ -76,8 +76,8 @@ npm run demo:record            # writes screenshots/demo-recording.webm
 
 This walks through the exact flow in `DEMO_VIDEO_GUIDE.md`:
 
-1. **Sign-up at `/register`** (`router.push('/')`, dashboard lives at root via the `(dashboard)` route group)
-2. **Dashboard overview at `/`**
+1. **Sign-in as the seeded demo merchant** at `/login` (`demo-screenshot@example.com` — shows the 12 real Testnet transactions; falls back to a fresh `/register` sign-up if the seeded account is absent)
+2. **Dashboard overview at `/`** (the `(dashboard)` route group serves the dashboard at root)
 3. **Transactions list at `/transactions`**
 4. **Wallet at `/wallet`**
 5. **Analytics at `/analytics`**
@@ -90,7 +90,7 @@ The recording script targets exactly **2:00 wall-clock** using per-section budge
 | Section | Target | What it covers |
 |---|---|---|
 | intro | 0:00–0:05 | Pre-roll /login |
-| signup | 0:05–0:33 | Registration + land on dashboard |
+| signup | 0:05–0:33 | Sign-in as seeded demo merchant (or registration) + land on dashboard |
 | dashboard | 0:33–0:51 | Stats + recent transactions |
 | transactions | 0:51–1:07 | Transaction list with Stellar tx hashes |
 | wallet | 1:07–1:15 | Wallet view |
@@ -118,7 +118,7 @@ gh release create demo-recording-v1 \
 
 - Release page: <https://github.com/Timrossid/global-remittance-bridge/releases/tag/demo-recording-v1>
 - Direct download: <https://github.com/Timrossid/global-remittance-bridge/releases/download/demo-recording-v1/demo-recording.webm>
-- Asset must be `video/webm`, ≈3.6 MB, named `demo-recording.webm`
+- Asset must be `video/webm`, ≈6.9 MB (regenerated 2026-08-01), named `demo-recording.webm`
 
 ### (Optional) Re-encode to MP4 for broader compatibility
 
@@ -187,7 +187,7 @@ To add a Google Form:
 
 - [x] 10+ wallet interactions recorded (12 verified Stellar testnet hashes — see table above)
 - [x] 7 screenshots captured (dashboard, transactions, wallet, analytics, feedback, mobile, contract-deployed)
-- [x] Demo video recorded & committed (`screenshots/demo-recording.webm`, 2-min walkthrough, registration verified end-to-end)
+- [x] Demo video recorded & committed (`screenshots/demo-recording.webm`, 2-min walkthrough, real login as the seeded demo merchant with 12 verified Testnet transactions, no route interception; regenerated 2026-08-01 against the local full stack — the committed file (≈6.9 MB) supersedes the earlier release asset, which should be re-uploaded with `gh release upload demo-recording-v1 screenshots/demo-recording.webm --clobber` or a v2 tag)
 - [x] Demo video published — *GitHub Release [demo-recording-v1](https://github.com/Timrossid/global-remittance-bridge/releases/tag/demo-recording-v1) with `demo-recording.webm` attached*
 - [x] Feedback form implemented at `/feedback`; collection mechanism + observed issues summarized in [`docs/USER_FEEDBACK.md`](../docs/USER_FEEDBACK.md)
 - [x] All URLs and contract addresses verified

@@ -429,7 +429,7 @@ For proof of wallet interactions, see the [screenshots/](screenshots/) directory
 
 ## 📸 Screenshots
 
-Fresh captures of the current merchant dashboard, rendered against Stellar Testnet with the live hardened escrow contract (`CD2YDP…`). The transaction rows shown are demo data seeded from the 12 verified Testnet hashes listed in [`screenshots/testnet_traction.csv`](screenshots/testnet_traction.csv) (captured via Playwright route interception; no live database is mutated).
+Fresh captures of the current merchant dashboard, rendered against Stellar Testnet with the live hardened escrow contract (`CD2YDP…`). The screenshots were captured against the **real running full stack** (dashboard → local Payment API → local Postgres) logged in as the seeded demo merchant, so every row is the actual seeded data — the 12 verified Testnet hashes listed in [`screenshots/testnet_traction.csv`](screenshots/testnet_traction.csv). No route interception or mocked API responses were used.
 
 ![Merchant dashboard](screenshots/dashboard.png)
 

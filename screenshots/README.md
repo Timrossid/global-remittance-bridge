@@ -17,15 +17,19 @@ This directory contains the required submission screenshots for the Global Micro
 
 ## Capture Notes
 
-Fresh captures are produced by rendering the merchant dashboard against Stellar Testnet
-with the live hardened escrow contract, seeding the pages with the 12 verified Testnet
-hashes listed in `testnet_traction.csv` (via Playwright route interception so no live
-database is mutated). The root `README.md` inlines these images in its **Screenshots**
-section; keep filenames stable so those image links keep resolving on GitHub.
+Fresh captures are produced against the **real running full stack**: a dashboard dev
+server wired to the local Payment API (`NEXT_PUBLIC_API_URL=http://localhost:3001`)
+backed by local Postgres, logged in as the seeded demo merchant
+(`demo-screenshot@example.com`), which surfaces the 12 verified Testnet hashes listed in
+`testnet_traction.csv`. No route interception or mocked API responses are used — every
+asset reflects the real running system. The root `README.md` inlines these images in
+its **Screenshots** section; keep filenames stable so those image links keep resolving
+on GitHub.
 
-To re-capture, start the dashboard dev server (`npm run dev` in `merchant-dashboard/`)
-and render the `/`, `/transactions`, `/wallet`, and `/analytics` routes with the API
-responses mocked from `testnet_traction.csv`.
+To re-capture: start the local Payment API (see `payment-api/`), start the dashboard
+dev server with `NEXT_PUBLIC_API_URL=http://localhost:3001`, then from
+`merchant-dashboard/` run `DEMO_BASE_URL=http://localhost:3100 npm run demo:capture`
+(logs in as the seeded merchant; falls back to registering a fresh merchant).
 
 ## Analytics Page
 
@@ -40,5 +44,5 @@ This page is powered by the new `GET /merchants/me/analytics` API endpoint.
 ## Demo Asset Notes
 
 - Use the live demo and the root README for project URLs and contract references.
-- For the wallet interaction proof, collect 10+ Stellar testnet transaction hashes and include them in your submission notes or a supporting document.
-- Record a 2–3 minute walkthrough of the end-to-end payment flow for the demo video.
+- For the wallet interaction proof, the 12 verified Stellar testnet transaction hashes are listed in `testnet_traction.csv` and `DEMO_SUBMISSION_NOTES.md`.
+- Record a 2-minute walkthrough of the end-to-end payment flow for the demo video (see `DEMO_VIDEO_GUIDE.md` and the automated `demo:record` script).

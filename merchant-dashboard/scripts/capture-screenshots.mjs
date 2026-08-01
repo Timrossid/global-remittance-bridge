@@ -2,18 +2,20 @@
 /**
  * capture-screenshots.mjs
  *
- * Logs into the live merchant dashboard and captures all required submission
- * screenshots into ./screenshots/. Requires the user to exist — registers a
- * fresh demo merchant on first use.
+ * Logs into the merchant dashboard and captures all required submission
+ * screenshots into the repo-root screenshots/ directory. Logs in as the
+ * seeded demo merchant (real data) by default, registering a fresh demo
+ * merchant only if the seeded account is not present.
  *
  * Usage:
  *   cd merchant-dashboard
  *   npm run demo:install-browser   # one-time
- *   npm run demo:capture           # runs this script
+ *   DEMO_BASE_URL=http://localhost:3100 npm run demo:capture   # local stack
+ *   npm run demo:capture                                       # live demo
  *
- * Output (in ./screenshots/):
- *   dashboard.png, transactions.png, analytics.png,
- *   wallet-interactions.png, feedback.png, mobile-view.png
+ * Output (in <repo>/screenshots/):
+ *   dashboard.png, transactions.png, analytics.png, wallet.png,
+ *   wallet-interactions.png, escrow.png, feedback.png, mobile-view.png
  */
 
 import { chromium } from 'playwright';
@@ -23,10 +25,12 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const PROJECT_ROOT = path.resolve(__dirname, '..');
-const SCREENSHOTS_DIR = path.join(PROJECT_ROOT, 'screenshots');
+const REPO_ROOT = path.resolve(__dirname, '..', '..');
+const SCREENSHOTS_DIR = path.join(REPO_ROOT, 'screenshots');
 
-const BASE_URL = 'https://merchant-dashboard-rosy.vercel.app';
+// Point at the local full stack (dashboard -> local Payment API) with
+// DEMO_BASE_URL=http://localhost:3100, or default to the live demo deploy.
+const BASE_URL = process.env.DEMO_BASE_URL || 'https://merchant-dashboard-rosy.vercel.app';
 const VIEWPORT = { width: 1440, height: 900 };
 const MOBILE_VIEWPORT = { width: 375, height: 812 };
 
@@ -53,9 +57,13 @@ function randomEmail() {
 }
 
 async function ensureRegistered(page) {
-  // First, try logging in as the demo account. If that fails, register a fresh
-  // merchant with random credentials.
-  await page.goto(`${BASE_URL}/login`, { waitUntil: 'domcontentloaded' });
+  // First, try logging in as the demo account (the seeded merchant with the
+  // 12 real Testnet transactions). If that fails, register a fresh merchant
+  // with random credentials. networkidle + a hydration pause are required on
+  // the dev server: filling right after domcontentloaded can race Next.js
+  // hydration, which resets the controlled inputs before submit.
+  await page.goto(`${BASE_URL}/login`, { waitUntil: 'networkidle', timeout: 60000 });
+  await page.waitForTimeout(1000);
   await page.fill('input[type="email"]', DEMO_CREDS.email);
   await page.fill('input[type="password"]', DEMO_CREDS.password);
   await page.click('button[type="submit"]');
@@ -65,7 +73,7 @@ async function ensureRegistered(page) {
         const p = url.pathname || '';
         return p !== '/login' && p !== '/register';
       },
-      { timeout: 8000 }
+      { timeout: 20000 }
     );
     console.log('  · logged in as', DEMO_CREDS.email);
     return DEMO_CREDS.email;
@@ -123,8 +131,15 @@ async function main() {
     await page.goto(`${BASE_URL}/analytics`, { waitUntil: 'domcontentloaded' });
     await captureSet(page, 'analytics');
 
+    // Both wallet.png (inlined by the root README) and wallet-interactions.png
+    // (historical proof-of-wallet-interactions filename) are captures of the
+    // same /wallet page, kept intentionally identical for stable filenames.
     await page.goto(`${BASE_URL}/wallet`, { waitUntil: 'domcontentloaded' });
     await captureSet(page, 'wallet-interactions');
+    await captureSet(page, 'wallet');
+
+    await page.goto(`${BASE_URL}/escrow`, { waitUntil: 'domcontentloaded' });
+    await captureSet(page, 'escrow');
 
     await page.goto(`${BASE_URL}/feedback`, { waitUntil: 'domcontentloaded' });
     await captureSet(page, 'feedback');

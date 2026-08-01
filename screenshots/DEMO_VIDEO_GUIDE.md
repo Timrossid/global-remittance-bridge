@@ -4,6 +4,12 @@
 **Resolution:** 1080p minimum  
 **Tool:** Loom, OBS Studio, or any screen recorder
 
+> **Note (2026-08-01):** the committed `screenshots/demo-recording.webm` is produced
+> by the automated `demo:record` script against the real local full stack. That
+> script signs in as the seeded demo merchant (`demo-screenshot@example.com`,
+> showing the 12 verified Testnet transactions) instead of registering a fresh
+> account, so this manual sign-up walkthrough below is the fallback flow only.
+
 ---
 
 ## Timing Breakdown

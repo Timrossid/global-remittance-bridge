@@ -11,9 +11,15 @@
  * Usage (from the repo root):
  *   cd merchant-dashboard
  *   playwright install chromium    # one-time
- *   npm run demo:record            # or: node scripts/record-demo.mjs
+ *   DEMO_BASE_URL=http://localhost:3100 npm run demo:record   # local stack
+ *   npm run demo:record            # live demo (default)
  *
  * Output: screenshots/demo-recording.webm  (~2 min, 1440x900 @ ~10 fps)
+ *
+ * By default the video signs in as the seeded demo merchant
+ * (demo-screenshot@example.com) so the walkthrough shows real data — 12
+ * verified Testnet transactions, real wallet address, real analytics. Falls
+ * back to a fresh registration only if the seeded account is absent.
  *
  * To publish: upload the resulting .webm (or convert to .mp4 with ffmpeg)
  * to YouTube (unlisted) or Loom, then paste the shareable URL into
@@ -33,8 +39,18 @@ const OUT_DIR = path.join(REPO_ROOT, 'screenshots');
 const FINAL_WEBM = path.join(OUT_DIR, 'demo-recording.webm');
 const TMP_VIDEO_DIR = path.join(OUT_DIR, '.demo-video-temp');
 
-const BASE_URL = 'https://merchant-dashboard-rosy.vercel.app';
+// Point at the local full stack (dashboard -> local Payment API) with
+// DEMO_BASE_URL=http://localhost:3100, or default to the live demo deploy.
+const BASE_URL = process.env.DEMO_BASE_URL || 'https://merchant-dashboard-rosy.vercel.app';
 const VIEWPORT = { width: 1440, height: 900 };
+
+// Seeded demo merchant created by scripts/seed-screenshot-data.ts in
+// payment-api. Carries the 12 verified Testnet transactions (see
+// screenshots/testnet_traction.csv) so the video shows real data.
+const DEMO_CREDS = {
+  email: 'demo-screenshot@example.com',
+  password: 'ScreenshotPass123!',
+};
 
 const T = {
   short: 400,
@@ -156,9 +172,41 @@ async function hideCaption(page) {
   await page.waitForTimeout(450);
 }
 
+async function trySeededLogin(page) {
+  // Preferred path: sign in as the seeded demo merchant so the walkthrough
+  // shows real data instead of an empty fresh account.
+  try {
+    // networkidle + a hydration pause are required on the dev server:
+    // filling right after domcontentloaded can race Next.js hydration, which
+    // resets the controlled inputs before submit and fails the login.
+    await page.goto(`${BASE_URL}/login`, { waitUntil: 'networkidle', timeout: 60000 });
+    await page.waitForTimeout(1500);
+    await page.fill('input[type="email"]', DEMO_CREDS.email);
+    await page.fill('input[type="password"]', DEMO_CREDS.password);
+    await page.click('button[type="submit"]');
+    await page.waitForURL(
+      (url) => {
+        const p = url.pathname || '';
+        return p !== '/login' && p !== '/register';
+      },
+      { timeout: 20000 }
+    );
+    await page.waitForSelector('text=Total Volume', { timeout: 8000 }).catch(() => {});
+    console.log('  · signed in as seeded demo merchant', DEMO_CREDS.email);
+    return { email: DEMO_CREDS.email, wallet: '', mode: 'login' };
+  } catch (err) {
+    console.log(`  · seeded login failed: ${err.message?.slice(0, 90) ?? err}`);
+    return null;
+  }
+}
+
 async function ensureRegistered(page) {
-  // Try up to 3 fresh registrations; the dashboard lives at `/` (root URL)
-  // because the app uses a `(dashboard)` route group in Next.js.
+  // Prefer the seeded demo merchant; fall back to up to 3 fresh registrations
+  // (the dashboard lives at `/` root URL because the app uses a `(dashboard)`
+  // route group in Next.js).
+  const seeded = await trySeededLogin(page);
+  if (seeded) return seeded;
+
   for (let i = 0; i < 3; i++) {
     const email = randomEmail();
     const wallet = randomWallet();
@@ -194,7 +242,7 @@ async function ensureRegistered(page) {
 
       // Give the dashboard stats API a moment to load.
       await page.waitForSelector('text=Total Volume', { timeout: 8000 }).catch(() => {});
-      return { email, wallet, registered: true };
+      return { email, wallet, mode: 'register' };
     } catch (err) {
       console.log(`  · registration attempt ${i + 1} failed: ${err.message?.slice(0, 80) ?? err}`);
     }
@@ -203,7 +251,7 @@ async function ensureRegistered(page) {
   // explains the product even without an authenticated session).
   await page.goto(`${BASE_URL}/`, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(T.settle);
-  return { email: '', wallet: '', registered: false };
+  return { email: '', wallet: '', mode: 'anon' };
 }
 
 async function smoothScroll(page, fraction) {
@@ -275,17 +323,25 @@ async function recordDemoInner(setBrowser) {
   await page.waitForTimeout(T.long);
   await sectionBudget('intro', sectionStart, SECTION_BUDGET_MS.intro);
 
-  // ── SECTION 1: Sign-Up Flow ──────────────────────────────
+  // ── SECTION 1: Sign-Up / Sign-In Flow ────────────────────
   sectionStart = Date.now();
-  await showCaption(page, `① ${SECTIONS[0]}`, 'Stellar wallet, email, password — fresh merchant in ~30 s', 2800);
   const merchant = await ensureRegistered(page);
-  console.log('  → registration:', merchant);
+  console.log(`  → ${merchant.mode}:`, merchant.email || '(anonymous fallback)');
+  const section1Title =
+    merchant.mode === 'login'
+      ? 'Demo Merchant — 12 real Testnet transactions'
+      : SECTIONS[0];
+  const section1Sub =
+    merchant.mode === 'login'
+      ? 'Seeded demo account · live Stellar hashes, no mocks'
+      : 'Stellar wallet, email, password — fresh merchant in ~30 s';
+  await showCaption(page, `① ${section1Title}`, section1Sub, 2800);
   await hideCaption(page);
   await sectionBudget('signup', sectionStart, SECTION_BUDGET_MS.signup);
 
   // ── SECTION 2: Dashboard Overview ────────────────────────
   sectionStart = Date.now();
-  await page.goto(`${BASE_URL}/dashboard`, { waitUntil: 'domcontentloaded' });
+  await page.goto(`${BASE_URL}/`, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(T.settle);
   await showCaption(page, `② ${SECTIONS[1]}`, 'Volume, settlement status, and recent activity at a glance', 2800);
   await smoothScroll(page, 0.55);
@@ -341,7 +397,7 @@ async function recordDemoInner(setBrowser) {
 
   // ── RECAP / OUTRO ────────────────────────────────────────
   sectionStart = Date.now();
-  await page.goto(`${BASE_URL}/dashboard`, { waitUntil: 'domcontentloaded' });
+  await page.goto(`${BASE_URL}/`, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(T.settle);
   await showCaption(page, RECAP_TEXT, 'github.com/Timrossid/global-remittance-bridge · try it: merchant-dashboard-rosy.vercel.app', 2800);
   await hideCaption(page);
@@ -384,7 +440,7 @@ async function recordDemoInner(setBrowser) {
   console.log('✅ Demo recording written to:', FINAL_WEBM);
   console.log('   file size:', `${(finalSize / 1024 / 1024).toFixed(2)} MB`);
   console.log('   resolution:', `${VIEWPORT.width}×${VIEWPORT.height}`);
-  console.log('   registered demo merchant:', merchant.email || '(anonymous fallback)');
+  console.log(`   demo merchant (${merchant.mode}):`, merchant.email || '(anonymous fallback)');
   console.log('');
   console.log('▶ To publish:');
   console.log('   # Optional: convert webm → mp4 (1080p) for broader compatibility');
