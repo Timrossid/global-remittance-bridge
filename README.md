@@ -429,13 +429,29 @@ For proof of wallet interactions, see the [screenshots/](screenshots/) directory
 
 ## 📸 Screenshots
 
-See the [screenshots/](screenshots/) directory for:
-- Dashboard UI (desktop)
-- Mobile responsive view
-- Transactions page
-- Custom analytics dashboard (daily volume, status/currency breakdowns)
-- Deployed contract on Stellar Expert
-- Proof of 12 verified Stellar testnet wallet interactions (all successful on-chain)
+Fresh captures of the current merchant dashboard, rendered against Stellar Testnet with the live hardened escrow contract (`CD2YDP…`). The transaction rows shown are demo data seeded from the 12 verified Testnet hashes listed in [`screenshots/testnet_traction.csv`](screenshots/testnet_traction.csv) (captured via Playwright route interception; no live database is mutated).
+
+![Merchant dashboard](screenshots/dashboard.png)
+
+*Dashboard — live volume, completed/pending settlements, active customers, and the five most recent transactions.*
+
+![Transactions page](screenshots/transactions.png)
+
+*Transactions — full history with status filters (All / Completed / Pending / Failed), sender wallet, date, and per-row Stellar Expert links.*
+
+![Treasury wallet](screenshots/wallet.png)
+
+*Treasury Wallet — received volume, wallet address with copy, KYC status, network, and settlement details.*
+
+![Analytics dashboard](screenshots/analytics.png)
+
+*Analytics — 30-day daily volume chart, status and currency breakdown donuts, and summary statistics.*
+
+![Mobile responsive view](screenshots/mobile-view.png)
+
+*Mobile responsive dashboard (375px viewport).*
+
+Deployed-contract proof on the Stellar Testnet block explorer is shown in the [Mainnet / Testnet Contract Details](#-mainnet--testnet-contract-details) section above; proof of the 12 verified Stellar Testnet wallet interactions is listed in [`screenshots/testnet_traction.csv`](screenshots/testnet_traction.csv) and [`screenshots/DEMO_SUBMISSION_NOTES.md`](screenshots/DEMO_SUBMISSION_NOTES.md).
 
 ---
 

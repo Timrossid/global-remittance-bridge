@@ -4,19 +4,27 @@ This directory contains the required submission screenshots for the Global Micro
 
 ## Required Screenshots
 
-- `dashboard.png` — main merchant dashboard UI
-- `mobile-view.png` — mobile-responsive dashboard layout
-- `transactions.png` — transactions page showing filters and transaction rows
-- `analytics.png` — analytics or monitoring dashboard view
-- `contract-deployed.png` — deployed Stellar contract page on Stellar Expert
-- `wallet-interactions.png` — proof of 10+ Stellar wallet interactions
+- `dashboard.png` — main merchant dashboard UI (fresh capture, 2026-08-01)
+- `transactions.png` — transactions page showing filters and transaction rows (fresh capture, 2026-08-01)
+- `wallet.png` — Treasury Wallet page: volume, wallet address, KYC/network/settlement status (fresh capture, 2026-08-01)
+- `analytics.png` — analytics or monitoring dashboard view (fresh capture, 2026-08-01)
+- `mobile-view.png` — mobile-responsive dashboard layout (fresh capture, 2026-08-01)
+- `contract-deployed-current.png` / `settlement-deployed-current.png` — deployed hardened contracts on Stellar Expert
+- `contract-deployed.png` — historical pre-hardening deployment screenshot
+- `wallet-interactions.png` — proof of Stellar wallet interactions
+- `testnet_traction.csv` — 12 verified Stellar Testnet transaction hashes
 
-## Capture Checklist
+## Capture Notes
 
-1. Open the live demo at https://merchant-dashboard-rosy.vercel.app.
-2. Sign in or register and navigate through the dashboard, wallet, transactions, and analytics views.
-3. Capture the six images above and save them with the exact filenames listed here.
-4. Replace the placeholder images in this directory with fresh captures if you want a polished submission package.
+Fresh captures are produced by rendering the merchant dashboard against Stellar Testnet
+with the live hardened escrow contract, seeding the pages with the 12 verified Testnet
+hashes listed in `testnet_traction.csv` (via Playwright route interception so no live
+database is mutated). The root `README.md` inlines these images in its **Screenshots**
+section; keep filenames stable so those image links keep resolving on GitHub.
+
+To re-capture, start the dashboard dev server (`npm run dev` in `merchant-dashboard/`)
+and render the `/`, `/transactions`, `/wallet`, and `/analytics` routes with the API
+responses mocked from `testnet_traction.csv`.
 
 ## Analytics Page
 
