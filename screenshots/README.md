@@ -9,6 +9,7 @@ This directory contains the required submission screenshots for the Global Micro
 - `wallet.png` — Treasury Wallet page: volume, wallet address, KYC/network/settlement status (fresh capture, 2026-08-01)
 - `analytics.png` — analytics or monitoring dashboard view (fresh capture, 2026-08-01)
 - `mobile-view.png` — mobile-responsive dashboard layout (fresh capture, 2026-08-01)
+- `escrow.png` — /escrow browser-signing page with Connect Freighter, pre-filled token, and contract cross-check (fresh capture, 2026-08-01)
 - `contract-deployed-current.png` / `settlement-deployed-current.png` — deployed hardened contracts on Stellar Expert
 - `contract-deployed.png` — historical pre-hardening deployment screenshot
 - `wallet-interactions.png` — proof of Stellar wallet interactions

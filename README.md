@@ -451,6 +451,10 @@ Fresh captures of the current merchant dashboard, rendered against Stellar Testn
 
 *Mobile responsive dashboard (375px viewport).*
 
+![Escrow page with Freighter](screenshots/escrow.png)
+
+*Escrow — browser-signing form wired to the hardened escrow contract `CD2YDP…` (embedded in the served bundle; the wallet page shows the on-screen truncated reference), with the **Connect Freighter** button, pre-filled native-XLM token contract, amount in stroops, and the contract cross-check panel mapping `create_escrow` (browser call) vs `release_funds` / `refund_funds` (admin flows).*
+
 Deployed-contract proof on the Stellar Testnet block explorer is shown in the [Mainnet / Testnet Contract Details](#-mainnet--testnet-contract-details) section above; proof of the 12 verified Stellar Testnet wallet interactions is listed in [`screenshots/testnet_traction.csv`](screenshots/testnet_traction.csv) and [`screenshots/DEMO_SUBMISSION_NOTES.md`](screenshots/DEMO_SUBMISSION_NOTES.md).
 
 ---
