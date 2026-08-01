@@ -18,7 +18,7 @@ services:
       - key: SOROBAN_RPC_URL
         value: https://soroban-testnet.stellar.org
       - key: SOROBAN_CONTRACT_ID
-        value: CBL3I4IDMIUZJEJG56DV2VP6K7L2ROLT3JYCC53KNU7PPUX6DGPJJVKC
+        value: CDQARTCHFZJZO3SQAKFTEZ25IJFWKB6Y7FWB2IYUX333LL4TUPWIUVJR
       # Set these as secret env vars in the Render dashboard:
       - key: DATABASE_URL
         sync: false
