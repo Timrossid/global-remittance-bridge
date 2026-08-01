@@ -29,6 +29,7 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
+  STELLAR_CLI_VERSION: "27.0.0"
 
 jobs:
   contract-ci:
@@ -58,13 +59,19 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
+            ~/.cargo/bin
             contracts/target
           key: ${{ runner.os }}-soroban-${{ hashFiles('contracts/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-soroban-
 
       - name: Install Stellar CLI
-        run: cargo install --locked stellar-cli --version 27.0.0
+        run: |
+          if ! command -v stellar >/dev/null 2>&1 || ! stellar --version 2>/dev/null | grep -q "$STELLAR_CLI_VERSION"; then
+            cargo install --locked stellar-cli --version "$STELLAR_CLI_VERSION"
+          else
+            echo "stellar-cli $STELLAR_CLI_VERSION already available from cache; skipping install."
+          fi
         working-directory: .
 
       - name: Check Rust formatting
@@ -114,8 +121,25 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Cache Cargo dependencies and build output
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin
+            contracts/target
+          key: ${{ runner.os }}-soroban-${{ hashFiles('contracts/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-soroban-
+
       - name: Install Stellar CLI
-        run: cargo install --locked stellar-cli --version 27.0.0
+        run: |
+          if ! command -v stellar >/dev/null 2>&1 || ! stellar --version 2>/dev/null | grep -q "$STELLAR_CLI_VERSION"; then
+            cargo install --locked stellar-cli --version "$STELLAR_CLI_VERSION"
+          else
+            echo "stellar-cli $STELLAR_CLI_VERSION already available from cache; skipping install."
+          fi
         working-directory: .
 
       - name: Download verified contract artifacts
@@ -219,8 +243,25 @@ jobs:
         with:
           targets: wasm32v1-none
 
+      - name: Cache Cargo dependencies and build output
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin
+            contracts/target
+          key: ${{ runner.os }}-soroban-${{ hashFiles('contracts/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-soroban-
+
       - name: Install Stellar CLI
-        run: cargo install --locked stellar-cli --version 27.0.0
+        run: |
+          if ! command -v stellar >/dev/null 2>&1 || ! stellar --version 2>/dev/null | grep -q "$STELLAR_CLI_VERSION"; then
+            cargo install --locked stellar-cli --version "$STELLAR_CLI_VERSION"
+          else
+            echo "stellar-cli $STELLAR_CLI_VERSION already available from cache; skipping install."
+          fi
         working-directory: .
 
       - name: Download contract artifacts
