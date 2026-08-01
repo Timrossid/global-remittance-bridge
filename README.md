@@ -529,14 +529,14 @@ stellar contract build
 
 ```bash
 cd payment-api
-npm ci --ignore-scripts
+npm ci
 npm run typecheck
 npm test
 npm run build
 npm run lint
 ```
 
-`npm run typecheck` and `npm run build` generate the Prisma Client before compiling, so clean installs do not depend on a previously generated local client.
+`npm ci` must run its postinstall step: it invokes `patch-package`, which applies the committed `patches/@stellar+stellar-sdk+16.0.1.patch` that guards the CJS `@noble/hashes` interop in `@stellar/stellar-sdk` (required for `node dist/payment-api/src/main.js` to start locally; do not use `npm ci --ignore-scripts` here). If you previously installed with `--ignore-scripts`, run `npx patch-package` once (or `npm ci` again) so the local server can start. The patch is version-locked to `@stellar/stellar-sdk@16.0.1`; when upgrading the SDK, update the patch in lockstep or `patch-package` will hard-fail the install. `npm run typecheck` and `npm run build` generate the Prisma Client before compiling, so clean installs do not depend on a previously generated local client.
 
 **Result:** all checks passed. Jest reported **3 passing tests**; Prisma validation/generation, TypeScript typechecking, NestJS build, and read-only ESLint all completed successfully.
 
