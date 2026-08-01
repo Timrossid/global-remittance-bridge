@@ -62,7 +62,7 @@ These are general Soroban testnet transactions demonstrating wallet activity; th
    - `analytics.png`
    - `feedback.png`
    - `mobile-view.png` — use browser DevTools device emulation at 375×812 px
-   - `contract-deployed.png` — capture from https://stellar.expert/explorer/testnet/contract/CBL3I4IDMIUZJEJG56DV2VP6K7L2ROLT3JYCC53KNU7PPUX6DGPJJVKC (historical pre-hardening deployment; the hardened deployment is `CDQARTCHFZJZO3SQAKFTEZ25IJFWKB6Y7FWB2IYUX333LL4TUPWIUVJR`)
+   - `contract-deployed.png` — capture from https://stellar.expert/explorer/testnet/contract/CBL3I4IDMIUZJEJG56DV2VP6K7L2ROLT3JYCC53KNU7PPUX6DGPJJVKC (historical pre-hardening deployment; the Environment-gated hardened deployment is `CD2YDPGFZCSXY3UAFJSO47GC5S3KDVECPL5SCCQQXIPTEBLDWMYPG44D`)
 
 ## How to Record the Demo Video
 
@@ -181,7 +181,7 @@ To add a Google Form:
 
 ### Transaction doesn't appear
 - Check that you're using the correct Stellar testnet network
-- Verify the contract address: `CBL3I4IDMIUZJEJG56DV2VP6K7L2ROLT3JYCC53KNU7PPUX6DGPJJVKC` (pre-hardening; hardened escrow is `CDQARTCHFZJZO3SQAKFTEZ25IJFWKB6Y7FWB2IYUX333LL4TUPWIUVJR`)
+- Verify the contract address: `CBL3I4IDMIUZJEJG56DV2VP6K7L2ROLT3JYCC53KNU7PPUX6DGPJJVKC` (pre-hardening; the Environment-gated hardened escrow is `CD2YDPGFZCSXY3UAFJSO47GC5S3KDVECPL5SCCQQXIPTEBLDWMYPG44D`)
 
 ## Submission Checklist
 

@@ -20,8 +20,8 @@ Our vision is to make international commerce accessible to small businesses that
 | **Payment API** | [https://global-remittance-api.onrender.com](https://global-remittance-api.onrender.com) |
 | **GitHub Repo** | [https://github.com/Timrossid/global-remittance-bridge](https://github.com/Timrossid/global-remittance-bridge) |
 | **Stellar Testnet Explorer** | [https://stellar.expert/explorer/testnet](https://stellar.expert/explorer/testnet) |
-| **Escrow Contract** | [CDQARTCHFZJZO3SQAKFTEZ25IJFWKB6Y7FWB2IYUX333LL4TUPWIUVJR](https://stellar.expert/explorer/testnet/contract/CDQARTCHFZJZO3SQAKFTEZ25IJFWKB6Y7FWB2IYUX333LL4TUPWIUVJR) |
-| **Settlement Contract** | [CCFDF5FO4JD4YPPDSRTB7VNVGX2AUC4EI3MXLZJ52OXKE5QZ72RPS73D](https://stellar.expert/explorer/testnet/contract/CCFDF5FO4JD4YPPDSRTB7VNVGX2AUC4EI3MXLZJ52OXKE5QZ72RPS73D) |
+| **Escrow Contract** | [CD2YDPGFZCSXY3UAFJSO47GC5S3KDVECPL5SCCQQXIPTEBLDWMYPG44D](https://stellar.expert/explorer/testnet/contract/CD2YDPGFZCSXY3UAFJSO47GC5S3KDVECPL5SCCQQXIPTEBLDWMYPG44D) |
+| **Settlement Contract** | [CBWLHX2XDGIFERM5DL6WZM373DL77MFG4SDF6BTEXNP4ISHTJHZ4YQAP](https://stellar.expert/explorer/testnet/contract/CBWLHX2XDGIFERM5DL6WZM373DL77MFG4SDF6BTEXNP4ISHTJHZ4YQAP) |
 | **Demo Video** | ▶️ **[Watch on GitHub Releases (demo-recording-v1)](https://github.com/Timrossid/global-remittance-bridge/releases/tag/demo-recording-v1)** — 2-min walkthrough of register → dashboard → transactions → wallet → analytics → feedback. Direct download: [demo-recording.webm](https://github.com/Timrossid/global-remittance-bridge/releases/download/demo-recording-v1/demo-recording.webm). |
 
 ---
@@ -290,19 +290,19 @@ The contracts below are deployed and publicly inspectable on **Stellar Testnet**
 
 | Contract | Network | Contract ID | Explorer |
 |---|---|---|---|
-| Escrow | Stellar Testnet (hardened, initialized) | `CDQARTCHFZJZO3SQAKFTEZ25IJFWKB6Y7FWB2IYUX333LL4TUPWIUVJR` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CDQARTCHFZJZO3SQAKFTEZ25IJFWKB6Y7FWB2IYUX333LL4TUPWIUVJR) |
-| Settlement | Stellar Testnet | `CCFDF5FO4JD4YPPDSRTB7VNVGX2AUC4EI3MXLZJ52OXKE5QZ72RPS73D` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CCFDF5FO4JD4YPPDSRTB7VNVGX2AUC4EI3MXLZJ52OXKE5QZ72RPS73D) |
+| Escrow | Stellar Testnet (hardened, initialized) | `CD2YDPGFZCSXY3UAFJSO47GC5S3KDVECPL5SCCQQXIPTEBLDWMYPG44D` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CD2YDPGFZCSXY3UAFJSO47GC5S3KDVECPL5SCCQQXIPTEBLDWMYPG44D) |
+| Settlement | Stellar Testnet | `CBWLHX2XDGIFERM5DL6WZM373DL77MFG4SDF6BTEXNP4ISHTJHZ4YQAP` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CBWLHX2XDGIFERM5DL6WZM373DL77MFG4SDF6BTEXNP4ISHTJHZ4YQAP) |
 
 ### Deployed contract proof
 
-The following screenshot shows the deployed escrow contract on the Stellar Testnet block explorer. The original asset is available at [`screenshots/contract-deployed.png`](screenshots/contract-deployed.png). Note: the screenshot depicts the historical pre-hardening deployment; the currently live hardened escrow is `CDQARTCHFZJZO3SQAKFTEZ25IJFWKB6Y7FWB2IYUX333LL4TUPWIUVJR`.
+The following screenshot shows the deployed escrow contract on the Stellar Testnet block explorer. The original asset is available at [`screenshots/contract-deployed.png`](screenshots/contract-deployed.png). Note: the screenshot depicts the historical pre-hardening deployment; the currently live hardened escrow is `CD2YDPGFZCSXY3UAFJSO47GC5S3KDVECPL5SCCQQXIPTEBLDWMYPG44D`.
 
 ![Escrow contract deployed on Stellar Testnet](screenshots/contract-deployed.png)
 
 ### Contract responsibilities
 
-- **Escrow:** `initialize(admin)` persists a one-time administrator in instance storage and maintains its TTL when the role is initialized, rotated, or used. `transfer_admin` requires both old and new administrator authentication. `create_escrow` requires initialization before transferring tokens, then records sender, receiver, token, amount, and status. `release_funds` and `refund_funds` require both authentication and equality with the persisted admin role. The IDs above were deployed from the hardened build and the escrow was initialized with the deployer as administrator on Stellar Testnet (init tx `aea72c290ca96729876439e586f577582bf23904473a61c5efdb2f4e216e25fb`).
-- **Settlement:** `process_settlement` transfers the net amount to the merchant and the 50-basis-point (0.5%) fee to the treasury. `initialize` and `distribute_fees` provide administrative state and fee distribution controls. The deployed settlement instance was initialized with the deployer as administrator (init tx `f004c65f4c463b7ec407d96c9cd9604d9ade9929f0aefdf411b281525cf07799`).
+- **Escrow:** `initialize(admin)` persists a one-time administrator in instance storage and maintains its TTL when the role is initialized, rotated, or used. `transfer_admin` requires both old and new administrator authentication. `create_escrow` requires initialization before transferring tokens, then records sender, receiver, token, amount, and status. `release_funds` and `refund_funds` require both authentication and equality with the persisted admin role. The IDs above were deployed by the Environment-gated Testnet workflow and the escrow was initialized with the deployer as administrator on Stellar Testnet (init tx `8fba6632d110e75a17f42db64e6e13706c8f00ee7be149e532e810aeeaedca90`).
+- **Settlement:** `process_settlement` transfers the net amount to the merchant and the 50-basis-point (0.5%) fee to the treasury. `initialize` and `distribute_fees` provide administrative state and fee distribution controls. The deployed settlement instance was deployed by the Environment-gated Testnet workflow; its `initialize(admin)` is performed separately when `distribute_fees` is required.
 - **Verification:** Testnet transaction evidence is listed in [`screenshots/DEMO_SUBMISSION_NOTES.md`](screenshots/DEMO_SUBMISSION_NOTES.md), including 12 successful Stellar Testnet transaction hashes. These demonstrate wallet activity and are not all limited to the two application contracts.
 
 ## 🚢 Deployment
@@ -473,7 +473,7 @@ The merchant dashboard now includes a direct, user-initiated Testnet integration
 ### Assessment conclusion
 
 The repository now demonstrates meaningful Soroban unit coverage, persisted escrow administrator authorization with negative tests, isolated API tests, CI-only browser coverage for wallet connection plus mocked Soroban simulation/signing/submission/polling, frontend CD, concrete architecture diagrams, and a manually triggered, Environment-gated Testnet contract deployment path.
-The hardened contracts have been redeployed and the escrow initialized on Stellar Testnet (escrow `CDQARTCHFZJZO3SQAKFTEZ25IJFWKB6Y7FWB2IYUX333LL4TUPWIUVJR`, settlement `CCFDF5FO4JD4YPPDSRTB7VNVGX2AUC4EI3MXLZJ52OXKE5QZ72RPS73D`). The redeploy, initialization, live Freighter verification, and evidence-capture procedure is documented in [`docs/LIVE_TESTNET_VERIFICATION.md`](docs/LIVE_TESTNET_VERIFICATION.md). Independent security review remains pending; its required scope and acceptance gates are documented in [`docs/SECURITY_REVIEW_SCOPE.md`](docs/SECURITY_REVIEW_SCOPE.md). No Mainnet deployment is claimed.
+The hardened contracts have been redeployed by the Environment-gated workflow and the escrow initialized on Stellar Testnet (escrow `CD2YDPGFZCSXY3UAFJSO47GC5S3KDVECPL5SCCQQXIPTEBLDWMYPG44D`, settlement `CBWLHX2XDGIFERM5DL6WZM373DL77MFG4SDF6BTEXNP4ISHTJHZ4YQAP`). The redeploy, initialization, live Freighter verification, and evidence-capture procedure is documented in [`docs/LIVE_TESTNET_VERIFICATION.md`](docs/LIVE_TESTNET_VERIFICATION.md). Independent security review remains pending; its required scope and acceptance gates are documented in [`docs/SECURITY_REVIEW_SCOPE.md`](docs/SECURITY_REVIEW_SCOPE.md). No Mainnet deployment is claimed.
 
 ## ✅ Final Validation Commands and Results
 
@@ -515,7 +515,7 @@ For the deterministic mocked Playwright run, use these public CI fixtures. The t
 cd merchant-dashboard
 npm ci
 export NEXT_PUBLIC_NETWORK=testnet
-export NEXT_PUBLIC_CONTRACT_ID=CDQARTCHFZJZO3SQAKFTEZ25IJFWKB6Y7FWB2IYUX333LL4TUPWIUVJR
+export NEXT_PUBLIC_CONTRACT_ID=CD2YDPGFZCSXY3UAFJSO47GC5S3KDVECPL5SCCQQXIPTEBLDWMYPG44D
 export NEXT_PUBLIC_ESCROW_TOKEN_ID=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC
 export NEXT_PUBLIC_ENABLE_TEST_WALLET_MOCK=true
 

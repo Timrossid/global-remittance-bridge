@@ -176,9 +176,9 @@ jobs:
 
           {
             echo "### Stellar Testnet deployment"
-            echo "- Escrow contract: \\`${escrow_id}\\`"
-            echo "- Settlement contract: \\`${settlement_id}\\`"
-            echo "- Escrow administrator: \\`${STELLAR_TESTNET_DEPLOYER_PUBLIC_KEY}\\`"
+            echo "- Escrow contract: \`${escrow_id}\`"
+            echo "- Settlement contract: \`${settlement_id}\`"
+            echo "- Escrow administrator: \`${STELLAR_TESTNET_DEPLOYER_PUBLIC_KEY}\`"
             echo "- Escrow initialization: completed by this approved deployment job."
             echo "- Verify both returned C-addresses in Stellar Expert before updating application configuration."
           } >> "$GITHUB_STEP_SUMMARY"
