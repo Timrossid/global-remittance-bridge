@@ -7,7 +7,8 @@
 - **Stellar Testnet Explorer:** https://stellar.expert/explorer/testnet
 - **Analytics Page:** https://merchant-dashboard-rosy.vercel.app/analytics
 - **Demo Video (hosted on GitHub):** ▶️ **[Release demo-recording-v1](https://github.com/Timrossid/global-remittance-bridge/releases/tag/demo-recording-v1)** — 2-min silent walkthrough attached as a release asset
-- **Demo Video (direct download):** [demo-recording.webm](https://github.com/Timrossid/global-remittance-bridge/releases/download/demo-recording-v1/demo-recording.webm) (≈6.9 MB · 1440×900 · WebM)
+- **Demo Video (direct download, MP4):** [demo-recording.mp4](https://github.com/Timrossid/global-remittance-bridge/releases/download/demo-recording-v1/demo-recording.mp4) (≈1.7 MB · 1440×900 · H.264 MP4 — broadest playback compatibility)
+- **Demo Video (direct download, WebM):** [demo-recording.webm](https://github.com/Timrossid/global-remittance-bridge/releases/download/demo-recording-v1/demo-recording.webm) (≈6.9 MB · 1440×900 · WebM)
 - **Demo Video (in repo):** [`screenshots/demo-recording.webm`](demo-recording.webm) — the source file attached to the release above
 
 ## Getting Started (For Testers)
@@ -117,23 +118,20 @@ gh release create demo-recording-v1 \
 ### Verify the published release
 
 - Release page: <https://github.com/Timrossid/global-remittance-bridge/releases/tag/demo-recording-v1>
-- Direct download: <https://github.com/Timrossid/global-remittance-bridge/releases/download/demo-recording-v1/demo-recording.webm>
-- Asset must be `video/webm`, ≈6.9 MB (regenerated 2026-08-01), named `demo-recording.webm`
+- Direct downloads: [demo-recording.mp4](https://github.com/Timrossid/global-remittance-bridge/releases/download/demo-recording-v1/demo-recording.mp4) · [demo-recording.webm](https://github.com/Timrossid/global-remittance-bridge/releases/download/demo-recording-v1/demo-recording.webm)
+- Assets: `demo-recording.mp4` (≈1.7 MB, `video/mp4`, H.264 — regenerated 2026-08-01) and `demo-recording.webm` (≈6.9 MB, `video/webm`, regenerated 2026-08-01)
 
-### (Optional) Re-encode to MP4 for broader compatibility
+### How the MP4 was produced
 
-If a reviewer can't play WebM locally, re-encode (needs local ffmpeg):
+The MP4 is re-encoded from the committed WebM (needs ffmpeg with libx264, e.g. `sudo apt install ffmpeg`):
 
 ```bash
 ffmpeg -i screenshots/demo-recording.webm -c:v libx264 -preset fast -crf 23 \
-       -vf "scale=1440:900" screenshots/demo-recording.mp4
+       -pix_fmt yuv420p -movflags +faststart screenshots/demo-recording.mp4
+gh release upload demo-recording-v1 screenshots/demo-recording.mp4 --clobber
 ```
 
-…and attach `screenshots/demo-recording.mp4` to the same release:
-
-```bash
-gh release upload demo-recording-v1 screenshots/demo-recording.mp4
-```
+Verified with ffprobe: `h264 · 1440×900 · 25 fps · 119.76 s` — matches the WebM duration.
 
 ## Feedback Collection
 
