@@ -411,14 +411,19 @@ For proof of wallet interactions, see the [screenshots/](screenshots/) directory
 
 ---
 
-## 📣 Social and Community Links
+## 📣 Social Media and Community Links
 
-- [GitHub repository](https://github.com/Timrossid/global-remittance-bridge) — source code, issues, and discussions.
-- [GitHub organization profile](https://github.com/Global-Micro-Remittance-Bridge) — related project repositories and community documentation.
+**Official project presence (verified):**
+
+- [GitHub repository](https://github.com/Timrossid/global-remittance-bridge) — the project's source code, issues, and discussions.
+- [GitHub organization profile](https://github.com/Global-Micro-Remittance-Bridge) — the project's organization account, related repositories, and community documentation.
+
+**Platform and community resources:**
+
 - [Stellar Developer Documentation](https://developers.stellar.org/docs) — platform documentation for contributors.
 - [Stellar Testnet Explorer](https://stellar.expert/explorer/testnet) — public on-chain verification.
 
-**Submission gap:** no project-owned X/Twitter, Discord, Telegram, or LinkedIn handle is published in this repository. The links above are verified project and platform URLs, not substitutes for unavailable social handles; add official accounts here when they are created and verified.
+**Submission gap:** no project-owned X/Twitter, Discord, Telegram, or LinkedIn handle is published yet. The GitHub repository and organization profile above are the project's verified official presence and the primary social/community channels today; add official accounts for the other platforms here when they are created and verified.
 
 ---
 
