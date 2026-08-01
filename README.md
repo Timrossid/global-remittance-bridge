@@ -295,9 +295,17 @@ The contracts below are deployed and publicly inspectable on **Stellar Testnet**
 
 ### Deployed contract proof
 
-The following screenshot shows the deployed escrow contract on the Stellar Testnet block explorer. The original asset is available at [`screenshots/contract-deployed.png`](screenshots/contract-deployed.png). Note: the screenshot depicts the historical pre-hardening deployment; the currently live hardened escrow is `CD2YDPGFZCSXY3UAFJSO47GC5S3KDVECPL5SCCQQXIPTEBLDWMYPG44D`.
+The screenshots below show the currently live hardened contracts on the Stellar Testnet block explorer (Stellar Expert), both deployed by the Environment-gated deployment workflow on 2026-08-01:
 
-![Escrow contract deployed on Stellar Testnet](screenshots/contract-deployed.png)
+![Escrow contract deployed on Stellar Testnet](screenshots/contract-deployed-current.png)
+
+*Escrow contract `CD2YDPGFZCSXY3UAFJSO47GC5S3KDVECPL5SCCQQXIPTEBLDWMYPG44D` on Stellar Expert — WASM contract, creator `GDGJSSE…`, created 2026-08-01 12:34:22 UTC, 1 data-storage entry.*
+
+![Settlement contract deployed on Stellar Testnet](screenshots/settlement-deployed-current.png)
+
+*Settlement contract `CBWLHX2XDGIFERM5DL6WZM373DL77MFG4SDF6BTEXNP4ISHTJHZ4YQAP` on Stellar Expert — WASM contract, creator `GDGJSSE…`, created 2026-08-01 12:34:32 UTC, 1 data-storage entry (deployed; its `initialize(admin)` is pending — see Contract responsibilities).*
+
+The original historical pre-hardening deployment screenshot is retained at [`screenshots/contract-deployed.png`](screenshots/contract-deployed.png).
 
 ### Contract responsibilities
 
