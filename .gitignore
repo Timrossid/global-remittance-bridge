@@ -27,6 +27,19 @@ dist/
 build/
 out/
 .next/
+*.tsbuildinfo
+
+# Lint configs
+.eslintrc.json
+!merchant-dashboard/.eslintrc.json
+!payment-api/.eslintrc.json
 
 # Other
 *.log
+
+# Scratch / exploratory output (Playwright captures never meant for the repo)
+merchant-dashboard/screenshots/
+/.demo-video-temp/
+
+# Release-only demo video (MP4 is published via GitHub Release, not committed)
+screenshots/demo-recording.mp4

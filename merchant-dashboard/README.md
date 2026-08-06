@@ -40,6 +40,8 @@ Copy `.env.example` to `.env` and fill in:
 - `NEXT_PUBLIC_API_URL`: The URL of the deployed Payment API.
 - `NEXT_PUBLIC_NETWORK`: Stellar network (e.g., `testnet`).
 - `NEXT_PUBLIC_CONTRACT_ID`: The deployed address of the Escrow contract.
+- `NEXT_PUBLIC_SOROBAN_RPC_URL`: Soroban RPC endpoint used by the browser escrow flow (Testnet default: `https://soroban-testnet.stellar.org`).
+- `NEXT_PUBLIC_ESCROW_TOKEN_ID`: Testnet token contract C-address used by the browser escrow form. For a native-XLM smoke test, use `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC`.
 
 ### Running Locally
 
@@ -53,6 +55,17 @@ npm run dev
 npm run build
 npm run start
 ```
+
+## 🔐 Browser Escrow Flow
+
+The `/escrow` page provides a direct, user-initiated Stellar Testnet flow through Freighter:
+
+1. Connect Freighter and verify it is on Testnet.
+2. Enter the receiver, token contract, and amount in token stroops.
+3. The dashboard builds and simulates `create_escrow(sender, receiver, token, amount)`.
+4. Freighter signs the prepared transaction; the browser submits it to Soroban RPC and polls for confirmation.
+
+The page cross-checks all escrow entry points against `contracts/escrow/src/lib.rs`: `initialize` and `transfer_admin` are deployment/recovery actions, `create_escrow` is exposed for the connected sender, and `release_funds`/`refund_funds` require the persisted administrator and are not exposed as arbitrary browser actions. Private keys never enter the dashboard. Use Testnet assets only. The published Testnet contract IDs predate the persisted-admin hardening and must be redeployed and initialized before relying on it. CI verifies the connection/UI path with a non-production mock; live transaction execution still requires manual Freighter/Testnet verification.
 
 ## 🎨 Design Philosophy
 

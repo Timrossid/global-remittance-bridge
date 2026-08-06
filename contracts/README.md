@@ -13,9 +13,11 @@ The contract layer provides two primary functions:
 
 ### 📦 Escrow Contract (`/escrow`)
 Handles the secure holding of funds during a transaction.
-- `create_escrow`: Locks funds for a specific receiver.
-- `release_funds`: Releases funds to the receiver upon administrative confirmation.
-- `refund_funds`: Returns funds to the sender if the transaction is cancelled.
+- `initialize`: Persists the first administrator once after deployment.
+- `transfer_admin`: Rotates the persisted administrator through a two-party authenticated recovery flow; both old and new administrators must sign.
+- `create_escrow`: Locks funds for a specific receiver after the contract has been initialized.
+- `release_funds`: Releases funds to the receiver when the persisted administrator authenticates.
+- `refund_funds`: Returns funds to the sender when the persisted administrator authenticates.
 
 ### ⚖️ Settlement Contract (`/settlement`)
 Manages the distribution of funds and fees.
@@ -30,7 +32,7 @@ Manages the distribution of funds and fees.
 
 ### Building
 ```bash
-cargo build --target wasm32-unknown-unknown --release
+cargo build --target wasm32v1-none --release
 ```
 
 ### Testing
@@ -38,11 +40,13 @@ cargo build --target wasm32-unknown-unknown --release
 cargo test
 ```
 
+The workspace includes contract-specific Rust tests under `escrow/src/test.rs` and `settlement/src/test.rs`. They cover token movement, state transitions, one-time initialization, persisted-admin checks, authenticated admin rotation, fee calculations, and invalid amounts. Run them before every deployment.
+
 ### Deployment
 To deploy a contract to the testnet:
 ```bash
-soroban contract deploy --wasm target/wasm32-unknown-unknown/release/escrow.wasm --source <YOUR_ACCOUNT_ID> --network testnet
+stellar contract deploy --wasm target/wasm32v1-none/release/escrow.wasm --source deployer --network testnet
 ```
 
 ## 🛡️ Security
-Contracts are designed to be minimal and follow best practices for resource management on Soroban. All critical state changes are gated by administrative authorization from the bridge API to prevent unauthorized fund movement.
+The escrow release/refund paths require both Soroban authentication and equality with the persisted administrator. Administrative rotation is explicit through `transfer_admin`; there is no emergency bypass or automatic recovery. The published Testnet contract IDs predate this hardening and must be redeployed and initialized before relying on the stronger role checks. See `docs/SECURITY_GUIDE.md` for threat controls and review gates.

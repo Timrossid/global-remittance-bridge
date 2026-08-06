@@ -1,0 +1,314 @@
+name: Soroban Contracts
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "contracts/**"
+      - ".github/workflows/soroban.yml"
+  pull_request:
+    branches: [main, master]
+    paths:
+      - "contracts/**"
+      - ".github/workflows/soroban.yml"
+  workflow_dispatch:
+    inputs:
+      prepare_testnet:
+        description: "Prepare a manually reviewed Testnet deployment artifact"
+        required: true
+        type: boolean
+        default: false
+      deploy_testnet:
+        description: "Deploy the verified artifacts to Stellar Testnet after Environment approval"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  STELLAR_CLI_VERSION: "27.0.0"
+
+jobs:
+  contract-ci:
+    name: Format, test, and build Soroban contracts
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: contracts
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Stellar CLI system dependencies
+        run: sudo apt-get update && sudo apt-get install -y pkg-config libdbus-1-dev libudev-dev
+        working-directory: .
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+          targets: wasm32v1-none
+
+      - name: Cache Cargo dependencies and build output
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin
+            contracts/target
+          key: ${{ runner.os }}-soroban-${{ hashFiles('contracts/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-soroban-
+
+      - name: Install Stellar CLI
+        run: |
+          if ! command -v stellar >/dev/null 2>&1 || ! stellar --version 2>/dev/null | grep -q "$STELLAR_CLI_VERSION"; then
+            cargo install --locked stellar-cli --version "$STELLAR_CLI_VERSION"
+          else
+            echo "stellar-cli $STELLAR_CLI_VERSION already available from cache; skipping install."
+          fi
+        working-directory: .
+
+      - name: Check Rust formatting
+        run: cargo fmt --all -- --check
+
+      - name: Check workspace for the Soroban WASM target
+        run: cargo check --workspace --target wasm32v1-none
+
+      - name: Run Rust tests
+        run: cargo test --workspace
+
+      - name: Run Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Build contract WASM artifacts
+        run: stellar contract build
+
+      - name: Upload contract artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: soroban-contract-wasm
+          path: contracts/target/wasm32v1-none/release/*.wasm
+          if-no-files-found: error
+          retention-days: 14
+
+  deploy-testnet:
+    name: Deploy verified contracts to Stellar Testnet
+    needs: contract-ci
+    if: github.event_name == 'workflow_dispatch' && inputs.deploy_testnet == true
+    runs-on: ubuntu-latest
+    environment:
+      name: stellar-testnet
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: contracts
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Stellar CLI system dependencies
+        run: sudo apt-get update && sudo apt-get install -y pkg-config libdbus-1-dev libudev-dev
+        working-directory: .
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo dependencies and build output
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin
+            contracts/target
+          key: ${{ runner.os }}-soroban-${{ hashFiles('contracts/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-soroban-
+
+      - name: Install Stellar CLI
+        run: |
+          if ! command -v stellar >/dev/null 2>&1 || ! stellar --version 2>/dev/null | grep -q "$STELLAR_CLI_VERSION"; then
+            cargo install --locked stellar-cli --version "$STELLAR_CLI_VERSION"
+          else
+            echo "stellar-cli $STELLAR_CLI_VERSION already available from cache; skipping install."
+          fi
+        working-directory: .
+
+      - name: Download verified contract artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: soroban-contract-wasm
+          path: contracts/target/wasm32v1-none/release
+
+      - name: Deploy escrow and settlement to Testnet
+        env:
+          STELLAR_TESTNET_DEPLOYER_PUBLIC_KEY: ${{ secrets.STELLAR_TESTNET_DEPLOYER_PUBLIC_KEY }}
+          STELLAR_SIGN_WITH_KEY: ${{ secrets.STELLAR_TESTNET_DEPLOYER_SECRET }}
+          STELLAR_RPC_URL: https://soroban-testnet.stellar.org
+          STELLAR_NETWORK_PASSPHRASE: Test SDF Network ; September 2015
+        run: |
+          set -euo pipefail
+          test -n "$STELLAR_TESTNET_DEPLOYER_PUBLIC_KEY"
+          test -n "$STELLAR_SIGN_WITH_KEY"
+          test -s target/wasm32v1-none/release/escrow.wasm
+          test -s target/wasm32v1-none/release/settlement.wasm
+
+          deploy() {
+            local contract="$1"
+            local output_file
+            local contract_id
+            output_file="$(mktemp)"
+            echo "Deploying ${contract} to Stellar Testnet..." >&2
+            stellar contract deploy \
+              --wasm "target/wasm32v1-none/release/${contract}.wasm" \
+              --source-account "$STELLAR_TESTNET_DEPLOYER_PUBLIC_KEY" \
+              --network testnet \
+              --rpc-url "$STELLAR_RPC_URL" \
+              --network-passphrase "$STELLAR_NETWORK_PASSPHRASE" \
+              > "$output_file"
+            cat "$output_file" >&2
+            contract_id="$(grep -Eo 'C[A-Z2-9]{55}' "$output_file" | tail -n 1 || true)"
+            rm -f "$output_file"
+            if ! [[ "$contract_id" =~ ^C[A-Z2-9]{55}$ ]]; then
+              echo "Deployment did not return a valid C-address for ${contract}." >&2
+              exit 1
+            fi
+            printf '%s' "$contract_id"
+          }
+
+          escrow_id="$(deploy escrow)"
+          settlement_id="$(deploy settlement)"
+
+          echo "Initializing the hardened escrow administrator..." >&2
+          stellar contract invoke \
+            --id "$escrow_id" \
+            --source-account "$STELLAR_TESTNET_DEPLOYER_PUBLIC_KEY" \
+            --network testnet \
+            --rpc-url "$STELLAR_RPC_URL" \
+            --network-passphrase "$STELLAR_NETWORK_PASSPHRASE" \
+            -- \
+            initialize \
+            --admin "$STELLAR_TESTNET_DEPLOYER_PUBLIC_KEY"
+
+          echo "Initializing the settlement administrator..." >&2
+          stellar contract invoke \
+            --id "$settlement_id" \
+            --source-account "$STELLAR_TESTNET_DEPLOYER_PUBLIC_KEY" \
+            --network testnet \
+            --rpc-url "$STELLAR_RPC_URL" \
+            --network-passphrase "$STELLAR_NETWORK_PASSPHRASE" \
+            -- \
+            initialize \
+            --admin "$STELLAR_TESTNET_DEPLOYER_PUBLIC_KEY"
+
+          {
+            echo "### Stellar Testnet deployment"
+            echo "- Escrow contract: \`${escrow_id}\`"
+            echo "- Settlement contract: \`${settlement_id}\`"
+            echo "- Escrow administrator: \`${STELLAR_TESTNET_DEPLOYER_PUBLIC_KEY}\`"
+            echo "- Escrow initialization: completed by this approved deployment job."
+            echo "- Settlement initialization: completed by this approved deployment job."
+            echo "- Verify both returned C-addresses in Stellar Expert before updating application configuration."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  prepare-testnet:
+    name: Prepare manually reviewed Testnet deployment
+    needs: contract-ci
+    if: github.event_name == 'workflow_dispatch' && inputs.prepare_testnet == true
+    runs-on: ubuntu-latest
+    environment:
+      name: stellar-testnet
+    defaults:
+      run:
+        working-directory: contracts
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Stellar CLI system dependencies
+        run: sudo apt-get update && sudo apt-get install -y pkg-config libdbus-1-dev libudev-dev
+        working-directory: .
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32v1-none
+
+      - name: Cache Cargo dependencies and build output
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin
+            contracts/target
+          key: ${{ runner.os }}-soroban-${{ hashFiles('contracts/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-soroban-
+
+      - name: Install Stellar CLI
+        run: |
+          if ! command -v stellar >/dev/null 2>&1 || ! stellar --version 2>/dev/null | grep -q "$STELLAR_CLI_VERSION"; then
+            cargo install --locked stellar-cli --version "$STELLAR_CLI_VERSION"
+          else
+            echo "stellar-cli $STELLAR_CLI_VERSION already available from cache; skipping install."
+          fi
+        working-directory: .
+
+      - name: Download contract artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: soroban-contract-wasm
+          path: contracts/target/wasm32v1-none/release
+
+      - name: Create Testnet deployment preparation package
+        run: |
+          cat > testnet-deployment-manifest.txt <<'EOF'
+          Global Micro-Remittance Bridge — Soroban Testnet deployment preparation
+
+          Network: Stellar Testnet
+          Soroban RPC: https://soroban-testnet.stellar.org
+          Network passphrase: Test SDF Network ; September 2015
+
+          This workflow prepares artifacts only. It does not submit transactions or
+          expose a deployer secret. Review the WASM files and configure a funded
+          Stellar CLI identity before deploying manually.
+
+          Example commands from the contracts directory:
+            stellar contract deploy \\
+              --wasm target/wasm32v1-none/release/escrow.wasm \\
+              --source deployer \\
+              --network testnet
+
+            stellar contract deploy \\
+              --wasm target/wasm32v1-none/release/settlement.wasm \\
+              --source deployer \\
+              --network testnet
+
+          After deployment, record the returned C-addresses in the project
+          environment configuration and verify them in Stellar Expert.
+          EOF
+
+          printf '%s\n' 'Prepared artifacts:'
+          find target/wasm32v1-none/release -maxdepth 1 -name '*.wasm' -print
+          printf '%s\n' 'Manifest:'
+          cat testnet-deployment-manifest.txt
+
+      - name: Upload Testnet deployment preparation
+        uses: actions/upload-artifact@v4
+        with:
+          name: soroban-testnet-deployment-preparation
+          path: |
+            contracts/target/wasm32v1-none/release/*.wasm
+            contracts/testnet-deployment-manifest.txt
+          if-no-files-found: error
+          retention-days: 14

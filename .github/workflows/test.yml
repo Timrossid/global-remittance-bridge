@@ -1,25 +1,65 @@
-name: Testing
+name: Test
 
 on:
   push:
-    branches: [ master ]
+    branches: [main, master]
   pull_request:
-    branches: [ master ]
+    branches: [main, master]
+
+permissions:
+  contents: read
 
 jobs:
-  test:
+  test-api:
+    name: Test Payment API
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: payment-api/package-lock.json
 
-    - name: Install dependencies
-      run: npm install
+      - name: Install dependencies
+        working-directory: payment-api
+        run: npm ci
 
-    - name: Run tests
-      run: npm test
+      - name: Run unit tests
+        working-directory: payment-api
+        run: npm test
+
+  test-dashboard:
+    name: Test Merchant Dashboard
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: merchant-dashboard/package-lock.json
+
+      - name: Install dependencies
+        working-directory: merchant-dashboard
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        working-directory: merchant-dashboard
+        run: npx playwright install --with-deps chromium
+
+      - name: Run dashboard smoke tests
+        working-directory: merchant-dashboard
+        env:
+          NEXT_PUBLIC_API_URL: 'http://127.0.0.1:3001'
+          NEXT_PUBLIC_NETWORK: 'testnet'
+          NEXT_PUBLIC_CONTRACT_ID: 'CD2YDPGFZCSXY3UAFJSO47GC5S3KDVECPL5SCCQQXIPTEBLDWMYPG44D'
+          NEXT_PUBLIC_ESCROW_TOKEN_ID: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC'
+          NEXT_PUBLIC_ENABLE_TEST_WALLET_MOCK: 'true'
+        run: npm test
