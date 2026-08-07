@@ -43,3 +43,4 @@ merchant-dashboard/screenshots/
 
 # Release-only demo video (MP4 is published via GitHub Release, not committed)
 screenshots/demo-recording.mp4
+.vercel
