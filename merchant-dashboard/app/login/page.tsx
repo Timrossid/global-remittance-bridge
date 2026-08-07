@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { captureEvent } from '@/components/posthog-provider';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -40,6 +41,10 @@ export default function LoginPage() {
       if (data.refresh_token) {
         localStorage.setItem('refresh_token', data.refresh_token);
       }
+      captureEvent('merchant_logged_in', {
+        merchant_id: data.merchant?.id,
+        network: process.env.NEXT_PUBLIC_NETWORK || 'testnet',
+      });
       router.push('/');
     } catch (err: any) {
       setError(err.message);

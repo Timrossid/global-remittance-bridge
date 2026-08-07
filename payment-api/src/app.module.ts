@@ -7,6 +7,7 @@ import { MerchantModule } from './merchants/merchant.module';
 import { PaymentModule } from './payments/payment.module';
 import { AnchorModule } from './anchors/anchor.module';
 import { NotificationModule } from './notifications/notification.module';
+import { FeedbackModule } from './feedback/feedback.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
@@ -28,6 +29,7 @@ import { PassportModule } from '@nestjs/passport';
     PaymentModule,
     AnchorModule,
     NotificationModule,
+    FeedbackModule,
   ],
   providers: [PrismaService, StellarService, SorobanService],
   exports: [PrismaService, StellarService, SorobanService],

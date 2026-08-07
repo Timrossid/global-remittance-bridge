@@ -132,6 +132,22 @@ model KycDocument {
   createdAt DateTime @default(now())
 }
 
+model Feedback {
+  id             String   @id @default(uuid())
+  name           String
+  email          String
+  walletAddress  String
+  network        String   @default("Testnet")
+  rating         Int
+  likedMost      String
+  missingFeature String
+  issues         String
+  recommend      String
+  improvements   String
+  merchantId     String?
+  createdAt      DateTime @default(now())
+}
+
 model Webhook {
   id        String   @id @default(uuid())
   url       String
