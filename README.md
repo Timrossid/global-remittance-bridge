@@ -390,21 +390,45 @@ endpoint, and can be mirrored to a public **Google Form** by setting
 
 > Data pending the owner's live Google Form + testnet onboarding drive. Once 10+ real,
 > wallet-interacting users submit the form, the rows below are filled from the exported
-> Excel sheet (regenerable with the export script).
+> Excel sheet (regenerable with the export script). Sample user ID format: `U001`, `U002`…
 
 | User ID | Name | Email | Wallet Address | Feedback Summary |
 |---|---|---|---|---|
-| _pending_ | _pending_ | _pending_ | _pending_ | _pending_ |
+| U001 | _Pending_ | _Pending_ | _Pending_ | _Pending_ |
+| U002 | _Pending_ | _Pending_ | _Pending_ | _Pending_ |
+| U003 | _Pending_ | _Pending_ | _Pending_ | _Pending_ |
+| U004 | _Pending_ | _Pending_ | _Pending_ | _Pending_ |
+| U005 | _Pending_ | _Pending_ | _Pending_ | _Pending_ |
+| U006 | _Pending_ | _Pending_ | _Pending_ | _Pending_ |
+| U007 | _Pending_ | _Pending_ | _Pending_ | _Pending_ |
+| U008 | _Pending_ | _Pending_ | _Pending_ | _Pending_ |
+| U009 | _Pending_ | _Pending_ | _Pending_ | _Pending_ |
+| U010 | _Pending_ | _Pending_ | _Pending_ | _Pending_ |
 
 ### Feedback Implementation
 
-> Each real response maps to an improvement + Git commit once collected.
+> Each real response maps to an improvement + the Git commit that implemented it. Add one
+> row per user once their feedback has been actioned.
 
 | User ID | Name | Email | Wallet Address | Feedback Summary | Improvement Made | Git Commit ID |
 |---|---|---|---|---|---|---|
-| _pending_ | _pending_ | _pending_ | _pending_ | _pending_ | _pending_ | _pending_ |
+| U001 | _Pending_ | _Pending_ | _Pending_ | _Pending_ | _Pending_ | `_Pending_` |
+| U002 | _Pending_ | _Pending_ | _Pending_ | _Pending_ | _Pending_ | `_Pending_` |
+| U003 | _Pending_ | _Pending_ | _Pending_ | _Pending_ | _Pending_ | `_Pending_` |
+| U004 | _Pending_ | _Pending_ | _Pending_ | _Pending_ | _Pending_ | `_Pending_` |
+| U005 | _Pending_ | _Pending_ | _Pending_ | _Pending_ | _Pending_ | `_Pending_` |
+| U006 | _Pending_ | _Pending_ | _Pending_ | _Pending_ | _Pending_ | `_Pending_` |
+| U007 | _Pending_ | _Pending_ | _Pending_ | _Pending_ | _Pending_ | `_Pending_` |
+| U008 | _Pending_ | _Pending_ | _Pending_ | _Pending_ | _Pending_ | `_Pending_` |
+| U009 | _Pending_ | _Pending_ | _Pending_ | _Pending_ | _Pending_ | `_Pending_` |
+| U010 | _Pending_ | _Pending_ | _Pending_ | _Pending_ | _Pending_ | `_Pending_` |
 
 ### Improvement Summary
+
+> Fill this in with a short narrative once real feedback exists. Example outline:
+
+- **[U00X] _Feature_ — "user requested X"** → implemented in commit `_hash_`
+- **[U00X] _Bug_ — "user hit error Y"** → fixed in commit `_hash_`
 
 See the commit-linked improvement log in [`docs/USER_FEEDBACK.md`](docs/USER_FEEDBACK.md)
 and the CI/CD, contract, and UX delivery described throughout this README. New feedback
