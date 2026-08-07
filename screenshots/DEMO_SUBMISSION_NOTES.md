@@ -142,7 +142,9 @@ The feedback page is live at: `/feedback`
 
 To add a Google Form:
 1. Create a form at https://forms.google.com
-2. Deploy with `NEXT_PUBLIC_FEEDBACK_FORM_URL="https://docs.google.com/forms/d/e/YOUR_GOOGLE_FORM_ID_HERE/viewform"`
+2. Deploy with `NEXT_PUBLIC_FEEDBACK_FORM_URL` set to the public form link.
+
+The live public form is at **https://forms.gle/QgempCFKcho8PwgA7** (see `docs/FEEDBACK_FORM_SPEC.md`).
 
 ## Troubleshooting
 

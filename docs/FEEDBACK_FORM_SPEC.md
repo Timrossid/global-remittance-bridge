@@ -4,10 +4,11 @@ This document specifies the exact Google Form used to collect onboarding + produ
 feedback for the Global Micro-Remittance Bridge, how to build a prefill URL, and how
 to export every response into an Excel (`.xlsx`) sheet committed to this repo.
 
-> **Status:** ✍️ The form is shared as a *spec* below. Publishing the live Google Form,
-> collecting 10+ real responses, and regenerating the committed Excel file is a manual,
-> owner-only action (needs the owner's Google account). All questions and the export
-> tooling described here are ready to use.
+> **Status:** ✅ **Live.** The public form is published at
+> **[https://forms.gle/QgempCFKcho8PwgA7](https://forms.gle/QgempCFKcho8PwgA7)**
+> with all 10 required fields. Remaining owner steps: collect 10+ real responses,
+> export them to Excel via `export-feedback-to-xlsx.ts`, and register them in the
+> README tables.
 
 ---
 
@@ -36,7 +37,11 @@ exactly so the prefill parameters and the Excel columns line up.
 
 ---
 
-## 2. Build a public (no login) Google Form link
+## 2. Live public form link
+
+The public (no-login) form is already live at **https://forms.gle/QgempCFKcho8PwgA7**.
+For reference, the settings used to make it public are below so any cloned/rebuilt form
+matches the same behavior:
 
 1. Create a new form in Google Forms and add the fields above.
 2. In **Settings → Responses**, turn **OFF** "Collect email addresses" (so testers can
