@@ -96,7 +96,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [router]);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-transparent flex">
       {/* Sidebar */}
       <aside
         className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white border-r transform transition-transform lg:translate-x-0 lg:static lg:inset-auto lg:w-64 ${
