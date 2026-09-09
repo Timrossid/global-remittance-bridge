@@ -96,7 +96,6 @@ export class PaymentService {
       await this.notificationService.sendEmail(
         merchant.email,
         'Payment Received',
-        `Payment of ${amount} ${asset} received. Transaction hash: ${txHash}`,
       );
 
       return { txHash, status: 'COMPLETED', transactionId: transaction.id };
@@ -235,9 +234,9 @@ export class PaymentService {
 
     if (status === 'COMPLETED') {
       const merchant = await this.prisma.merchant.findUnique({ where: { id: tx.merchantId } });
-      if (merchant) {
+      if (merchant && process.env.WEBHOOK_BASE_URL) {
         await this.notificationService.sendWebhook(
-          `${process.env.WEBHOOK_BASE_URL || 'https://merchant-webhook.example.com'}/events`,
+          `${process.env.WEBHOOK_BASE_URL}/events`,
           { txId: id, status: 'COMPLETED', merchantId: tx.merchantId },
         );
       }

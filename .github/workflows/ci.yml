@@ -1,0 +1,273 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'push' && github.sha || github.event.pull_request.head.sha }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [payment-api, merchant-dashboard]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: ${{ matrix.project }}/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ${{ matrix.project }}
+        run: npm ci
+
+      - name: Run ESLint
+        working-directory: ${{ matrix.project }}
+        run: npm run lint
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: lint
+
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [payment-api, merchant-dashboard]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: ${{ matrix.project }}/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ${{ matrix.project }}
+        run: npm ci
+
+      - name: Run tests — ${{ matrix.project }}
+        working-directory: ${{ matrix.project }}
+        run: npm test
+
+      - name: TypeScript typecheck — ${{ matrix.project }}
+        working-directory: ${{ matrix.project }}
+        run: npx tsc --noEmit
+
+  test-dashboard-e2e:
+    name: Dashboard E2E (Playwright)
+    runs-on: ubuntu-latest
+    needs: lint
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: merchant-dashboard/package-lock.json
+
+      - name: Install dependencies
+        working-directory: merchant-dashboard
+        run: npm ci
+
+      - name: Install Playwright Chromium and system dependencies
+        working-directory: merchant-dashboard
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright smoke tests
+        working-directory: merchant-dashboard
+        env:
+          NEXT_PUBLIC_API_URL: 'http://127.0.0.1:3001'
+          NEXT_PUBLIC_NETWORK: testnet
+          NEXT_PUBLIC_CONTRACT_ID: CD2YDPGFZCSXY3UAFJSO47GC5S3KDVECPL5SCCQQXIPTEBLDWMYPG44D
+          NEXT_PUBLIC_ESCROW_TOKEN_ID: CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC
+          NEXT_PUBLIC_ENABLE_TEST_WALLET_MOCK: 'true'
+        run: npm test
+
+      - name: Upload Playwright test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: merchant-dashboard/test-results/
+          retention-days: 7
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [payment-api, merchant-dashboard]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: ${{ matrix.project }}/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ${{ matrix.project }}
+        run: npm ci
+
+      - name: Build — ${{ matrix.project }}
+        working-directory: ${{ matrix.project }}
+        env:
+          NEXT_PUBLIC_API_URL: 'http://localhost:3001'
+          NEXT_PUBLIC_NETWORK: testnet
+          NEXT_PUBLIC_CONTRACT_ID: CD2YDPGFZCSXY3UAFJSO47GC5S3KDVECPL5SCCQQXIPTEBLDWMYPG44D
+        run: npm run build
+
+  soroban:
+    name: Soroban Contracts
+    runs-on: ubuntu-latest
+    needs: lint
+
+    defaults:
+      run:
+        working-directory: contracts
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y pkg-config libdbus-1-dev libudev-dev
+        working-directory: .
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+          targets: wasm32v1-none
+
+      - name: Cache Cargo dependencies and build output
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin
+            contracts/target
+          key: ${{ runner.os }}-soroban-${{ hashFiles('contracts/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-soroban-
+
+      - name: Install Stellar CLI
+        run: |
+          if ! command -v stellar >/dev/null 2>&1 || ! stellar --version 2>/dev/null | grep -q "$STELLAR_CLI_VERSION"; then
+            cargo install --locked stellar-cli --version "$STELLAR_CLI_VERSION"
+          else
+            echo "stellar-cli $STELLAR_CLI_VERSION already available; skipping."
+          fi
+        working-directory: .
+        env:
+          CARGO_TERM_COLOR: always
+          STELLAR_CLI_VERSION: '27.0.0'
+
+      - name: Check Rust formatting
+        run: cargo fmt --all -- --check
+
+      - name: Check Soroban WASM target
+        run: cargo check --workspace --target wasm32v1-none
+
+      - name: Run contract tests
+        run: cargo test --workspace
+
+      - name: Run Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Build contract WASM artifacts
+        run: stellar contract build
+
+      - name: Upload WASM artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: soroban-contract-wasm
+          path: contracts/target/wasm32v1-none/release/*.wasm
+          if-no-files-found: error
+          retention-days: 14
+
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    needs: lint
+
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [payment-api, merchant-dashboard]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: ${{ matrix.project }}/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ${{ matrix.project }}
+        run: npm ci
+
+      - name: Run npm audit — ${{ matrix.project }}
+        working-directory: ${{ matrix.project }}
+        run: npm audit --audit-level=high
+
+  security-rust:
+    name: Security Audit (Rust)
+    runs-on: ubuntu-latest
+    needs: lint
+
+    defaults:
+      run:
+        working-directory: contracts
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-audit
+        run: cargo install --locked cargo-audit
+        working-directory: .
+
+      - name: Run cargo audit
+        run: cargo audit
