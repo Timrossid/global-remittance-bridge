@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "Global Micro-Remittance Bridge"
+version: 1.0.0
+date-released: 2026-08-01
+url: "https://github.com/Timrossid/global-remittance-bridge"
+repository-code: "https://github.com/Timrossid/global-remittance-bridge"
+
+authors:
+  - family-names: "Rossi"
+    given-names: "Tim"
+    email: "contact@global-remittance-bridge.org"
+    affiliation: "Global Micro-Remittance Bridge"
+
+keywords:
+  - stellar
+  - soroban
+  - smart-contracts
+  - remittance
+  - cross-border-payments
+  - fintech
+  - blockchain
+  - open-source
+
+license: Apache-2.0
