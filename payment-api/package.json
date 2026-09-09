@@ -43,7 +43,7 @@
     "rxjs": "^7.8.0",
     "soroban-client": "^1.0.1",
     "ts-node": "^10.9.1",
-    "typescript": "^5.1.0"
+    "typescript": "^7.0.2"
   },
   "devDependencies": {
     "@nestjs/testing": "^10.0.0",
