@@ -1,47 +1,40 @@
-import { Controller, Post, Get, Body, Param, Put, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, Put, UseGuards, Request, UsePipes, ValidationPipe } from '@nestjs/common';
 import { PaymentService } from './payment.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { CreatePaymentDto, TransferDto, EscrowDto, UpdateStatusDto } from './dto/payment.dto';
 
 @Controller('payments')
 export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
 
   @Post('create')
-  async create(@Body() paymentDto: any) {
+  @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
+  async create(@Body() paymentDto: CreatePaymentDto) {
     return this.paymentService.createPayment(paymentDto);
   }
 
-  /**
-   * POST /payments/transfer
-   * Initiate a direct Stellar payment to the authenticated merchant's wallet.
-   * Body: { amount: number, asset: string, assetIssuer?: string }
-   */
   @UseGuards(JwtAuthGuard)
   @Post('transfer')
+  @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
   async transfer(
     @Request() req,
-    @Body() data: { amount: number; asset: string; assetIssuer?: string },
+    @Body() data: TransferDto,
   ) {
-    // The system wallet sends `amount` to the merchant's wallet address
     return this.paymentService.initiateStellarTransfer(
-      req.user.userId,     // merchantId
-      req.user.userId,     // customerId (same actor in this flow; override via body if needed)
+      req.user.userId,
+      req.user.userId,
       data.amount,
       data.asset,
       data.assetIssuer,
     );
   }
 
-  /**
-   * POST /payments/escrow
-   * Create a Soroban escrow payment.
-   * Body: { senderAddress: string, tokenAddress: string, amount: number }
-   */
   @UseGuards(JwtAuthGuard)
   @Post('escrow')
+  @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
   async escrow(
     @Request() req,
-    @Body() data: { senderAddress: string; tokenAddress: string; amount: number },
+    @Body() data: EscrowDto,
   ) {
     return this.paymentService.createEscrowPayment(
       data.senderAddress,
@@ -63,7 +56,8 @@ export class PaymentController {
   }
 
   @Put(':id/status')
-  async updateStatus(@Param('id') id: string, @Body('status') status: string) {
-    return this.paymentService.updateTransactionStatus(id, status);
+  @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
+  async updateStatus(@Param('id') id: string, @Body() data: UpdateStatusDto) {
+    return this.paymentService.updateTransactionStatus(id, data.status);
   }
 }
