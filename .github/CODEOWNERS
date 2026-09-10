@@ -1,0 +1,8 @@
+# Global Remittance Bridge CODEOWNERS
+* @Timrossid
+/contracts/ @Timrossid
+/payment-api/ @Timrossid
+/merchant-dashboard/ @Timrossid
+/infrastructure/ @Timrossid
+/*.md @Timrossid
+/docs/ @Timrossid
