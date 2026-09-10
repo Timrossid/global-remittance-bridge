@@ -1,25 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-
-const REQUIRED_ENV_VARS = [
-  'DATABASE_URL',
-  'JWT_SECRET',
-  'STELLAR_NETWORK',
-  'SOROBAN_RPC_URL',
-  'SOROBAN_CONTRACT_ID',
-];
-
-function validateEnv() {
-  const missing = REQUIRED_ENV_VARS.filter(
-    (key) => !process.env[key] || process.env[key].trim() === '',
-  );
-  if (missing.length > 0) {
-    throw new Error(
-      `Missing required environment variables: ${missing.join(', ')}. ` +
-        'Set them in your deployment platform or .env file before starting the server.',
-    );
-  }
-}
+import { validateEnv } from './common/utils/env.util';
 
 validateEnv();
 
@@ -35,18 +16,27 @@ async function bootstrap() {
   app.enableCors({
     origin: corsOrigin,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Correlation-ID'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Correlation-ID',
+      'X-API-Key',
+      'Idempotency-Key',
+    ],
     credentials: true,
   });
 
   app.setGlobalPrefix('api/v1');
 
   const httpAdapter = app.getHttpAdapter();
-  httpAdapter.get('/health', (_req: any, res: any) => {
+  httpAdapter.get('/health', async (_req: any, res: any) => {
+    const prisma = app.get('PrismaService');
+    const dbHealth = await prisma.healthCheck();
     res.status(200).json({
-      status: 'ok',
+      status: dbHealth.status,
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
+      database: dbHealth,
     });
   });
 
