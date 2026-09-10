@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cost-monitoring
+  namespace: remittance-bridge
+data:
+  cost-rules.yml: |
+    groups:
+      - name: cost_alerts
+        rules:
+          - alert: HighCloudSpend
+            expr: sum(rate(cloud_cost_usd[1h])) > 100
+            for: 1h
+            labels:
+              severity: warning
+            annotations:
+              summary: "High cloud spending detected"
+              description: "Current spend is ${{ $value }}/hour"
