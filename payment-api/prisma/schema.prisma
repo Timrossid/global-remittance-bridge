@@ -156,3 +156,13 @@ model Webhook {
   secret    String
   createdAt DateTime @default(now())
 }
+
+model NotificationPreference {
+  id           String   @id @default(uuid())
+  userId       String
+  emailEnabled Boolean  @default(true)
+  smsEnabled   Boolean  @default(false)
+  webhookOnly  Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
