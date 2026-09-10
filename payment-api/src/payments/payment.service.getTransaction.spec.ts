@@ -2,9 +2,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { PaymentService } from '../../src/payments/payment.service';
 import { PrismaService } from '../../src/common/prisma.service';
 import { NotFoundException } from '@nestjs/common';
+import { StellarService } from '../../src/common/stellar.service';
+import { NotificationService } from '../../src/notifications/notification.service';
+import { SorobanService } from '../../src/common/soroban.service';
 
 describe('PaymentService.getTransaction', () => {
-  const prisma = { transaction: { findUnique: vi.fn() } } as any;
+  const prisma = { transaction: { findUnique: jest.fn() } } as any;
   const stellarService = {} as any;
   const notificationService = {} as any;
   const sorobanService = {} as any;
@@ -22,7 +25,7 @@ describe('PaymentService.getTransaction', () => {
       ],
     }).compile();
     service = module.get(PaymentService);
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it('throws NotFoundException for missing transaction', async () => {

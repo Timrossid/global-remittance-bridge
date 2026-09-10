@@ -7,11 +7,11 @@ import { SorobanService } from '../../src/common/soroban.service';
 
 describe('PaymentService.initiateStellarTransfer', () => {
   const prisma = {
-    merchant: { findUnique: vi.fn() },
-    transaction: { create: vi.fn(), update: vi.fn() },
+    merchant: { findUnique: jest.fn() },
+    transaction: { create: jest.fn(), update: jest.fn() },
   } as any;
-  const stellarService = { buildPaymentTransaction: vi.fn(), submitTransaction: vi.fn() } as any;
-  const notificationService = { sendEmail: vi.fn() } as any;
+  const stellarService = { buildPaymentTransaction: jest.fn(), submitTransaction: jest.fn() } as any;
+  const notificationService = { sendEmail: jest.fn() } as any;
   const sorobanService = {} as any;
 
   let service: PaymentService;
@@ -27,7 +27,7 @@ describe('PaymentService.initiateStellarTransfer', () => {
       ],
     }).compile();
     service = module.get(PaymentService);
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it('throws when STELLAR_SECRET is missing', async () => {

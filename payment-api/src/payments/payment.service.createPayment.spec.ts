@@ -1,9 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PaymentService } from '../../src/payments/payment.service';
 import { PrismaService } from '../../src/common/prisma.service';
+import { StellarService } from '../../src/common/stellar.service';
+import { NotificationService } from '../../src/notifications/notification.service';
+import { SorobanService } from '../../src/common/soroban.service';
 
 describe('PaymentService.createPayment', () => {
-  const prisma = { transaction: { create: vi.fn() } } as any;
+  const prisma = { transaction: { create: jest.fn() } } as any;
   const stellarService = {} as any;
   const notificationService = {} as any;
   const sorobanService = {} as any;
@@ -21,7 +24,7 @@ describe('PaymentService.createPayment', () => {
       ],
     }).compile();
     service = module.get(PaymentService);
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it('creates a PENDING payment record', async () => {

@@ -7,12 +7,12 @@ import { SorobanService } from '../../src/common/soroban.service';
 
 describe('PaymentService', () => {
   const prisma = {
-    transaction: { create: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
-    merchant: { findUnique: vi.fn() },
+    transaction: { create: jest.fn(), findUnique: jest.fn(), update: jest.fn(), findMany: jest.fn() },
+    merchant: { findUnique: jest.fn() },
   } as any;
-  const stellarService = { buildPaymentTransaction: vi.fn(), submitTransaction: vi.fn() } as any;
-  const notificationService = { sendEmail: vi.fn(), sendWebhook: vi.fn() } as any;
-  const sorobanService = { callRPC: vi.fn(), submitTransaction: vi.fn(), getTransactionStatus: vi.fn() } as any;
+  const stellarService = { buildPaymentTransaction: jest.fn(), submitTransaction: jest.fn() } as any;
+  const notificationService = { sendEmail: jest.fn(), sendWebhook: jest.fn() } as any;
+  const sorobanService = { callRPC: jest.fn(), submitTransaction: jest.fn(), getTransactionStatus: jest.fn() } as any;
 
   let service: PaymentService;
 
@@ -27,7 +27,7 @@ describe('PaymentService', () => {
       ],
     }).compile();
     service = module.get(PaymentService);
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it('creates a payment record', async () => {

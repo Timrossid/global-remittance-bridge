@@ -1,14 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PaymentService } from '../../src/payments/payment.service';
 import { PrismaService } from '../../src/common/prisma.service';
+import { StellarService } from '../../src/common/stellar.service';
+import { NotificationService } from '../../src/notifications/notification.service';
+import { SorobanService } from '../../src/common/soroban.service';
 
 describe('PaymentService.updateTransactionStatus', () => {
   const prisma = {
-    transaction: { update: vi.fn() },
-    merchant: { findUnique: vi.fn() },
+    transaction: { update: jest.fn() },
+    merchant: { findUnique: jest.fn() },
   } as any;
   const stellarService = {} as any;
-  const notificationService = { sendEmail: vi.fn(), sendWebhook: vi.fn() } as any;
+  const notificationService = { sendEmail: jest.fn(), sendWebhook: jest.fn() } as any;
   const sorobanService = {} as any;
 
   let service: PaymentService;
@@ -24,7 +27,7 @@ describe('PaymentService.updateTransactionStatus', () => {
       ],
     }).compile();
     service = module.get(PaymentService);
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it('rejects invalid status values', async () => {
