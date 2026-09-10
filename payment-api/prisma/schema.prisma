@@ -92,12 +92,23 @@ model Settlement {
   updatedAt   DateTime          @updatedAt
 }
 
+model IdempotencyKey {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  response  Json?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([key])
+}
+
 model ApiKey {
   id        String   @id @default(uuid())
   key       String   @unique
   merchantId String
   merchant  Merchant @relation(fields: [merchantId], references: [id])
   createdAt DateTime @default(now())
+  expiresAt  DateTime?
 }
 
 model ExchangeRate {
