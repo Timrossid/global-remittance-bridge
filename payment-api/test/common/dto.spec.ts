@@ -1,4 +1,3 @@
-import { IsString, IsNotEmpty, IsUUID, IsNumber, Min, IsOptional } from 'class-validator';
 import { plainToClass } from 'class-transformer';
 import { validate } from 'class-validator';
 import { CreatePaymentDto, CreateEscrowPaymentDto } from '../../src/common/dto';
