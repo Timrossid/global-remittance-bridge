@@ -249,4 +249,3 @@ fn expire_escrow_returns_funds_to_sender() {
     assert_eq!(escrow.get_escrow_status(escrow_id), 3);
     assert_eq!(balances.balance(&sender), 200);
 }
-
