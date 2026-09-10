@@ -1,9 +1,8 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'node:test';
 
-// Unit-tests for the indexer cursor logic using inline stubs
-describe('indexer cursor', () => {
-  it('returns null when no prior transactions exist', () => {
-    const rows: any[] = [];
+describe('indexer cursor logic', () => {
+  it('returns empty string when no prior transactions exist', () => {
+    const rows: { lastHash: string }[] = [];
     const max = rows.reduce((m, r) => (r.lastHash > m ? r.lastHash : m), '');
     expect(max).toBe('');
   });
