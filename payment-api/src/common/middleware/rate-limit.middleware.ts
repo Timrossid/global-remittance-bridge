@@ -44,10 +44,19 @@ export class RateLimitMiddleware implements NestMiddleware {
     const limit = userId ? this.userMaxRequests : this.maxRequests;
 
     if (entry.count > limit) {
+      const retryAfter = Math.ceil((entry.resetAt - now) / 1000);
+      res.set('Retry-After', String(retryAfter));
+      res.set('X-RateLimit-Limit', String(limit));
+      res.set('X-RateLimit-Remaining', '0');
+      res.set('X-RateLimit-Reset', new Date(entry.resetAt).toISOString());
       throw new BadRequestException(
-        `Rate limit exceeded. Please try again in ${Math.ceil((entry.resetAt - now) / 1000)} seconds.`,
+        `Rate limit exceeded. Please try again in ${retryAfter} seconds.`,
       );
     }
+
+    res.set('X-RateLimit-Limit', String(limit));
+    res.set('X-RateLimit-Remaining', String(Math.max(0, limit - entry.count)));
+    res.set('X-RateLimit-Reset', new Date(entry.resetAt).toISOString());
 
     next();
   }
