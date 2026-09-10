@@ -22,12 +22,14 @@ enum SettlementStatus {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  role      String   @default("USER")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(uuid())
+  email         String   @unique
+  password      String
+  role          String   @default("USER")
+  emailVerified Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  deletedAt     DateTime?
 }
 
 model RefreshToken {
@@ -42,6 +44,30 @@ model RefreshToken {
   @@index([userId])
 }
 
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@index([userId])
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@index([userId])
+}
+
 model Merchant {
   id            String   @id @default(uuid())
   name          String
@@ -50,6 +76,7 @@ model Merchant {
   kycStatus     String   @default("PENDING")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  deletedAt     DateTime?
   transactions  Transaction[]
   settlements   Settlement[]
   apiKeys       ApiKey[]
@@ -62,6 +89,7 @@ model Customer {
   kycStatus     String   @default("PENDING")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  deletedAt     DateTime?
   transactions  Transaction[]
 }
 
