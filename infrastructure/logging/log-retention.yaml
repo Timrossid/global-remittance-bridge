@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: log-retention
+  namespace: remittance-bridge
+data:
+  retention-policy.yml: |
+    retention:
+      application_logs: 30d
+      access_logs: 90d
+      audit_logs: 2555d  # 7 years
+      error_logs: 30d
+      metrics: 90d
+
+    indices:
+      - name: payment-api-logs-*
+        retention: 30d
+        rollover_size: 10GB
+
+      - name: payment-api-audit-*
+        retention: 2555d
+        rollover_size: 50GB
