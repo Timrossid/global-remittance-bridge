@@ -16,6 +16,9 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
 import { RateLimitMiddleware } from './common/middleware/rate-limit.middleware';
 import { RequestSizeLimitMiddleware } from './common/middleware/request-size-limit.middleware';
+import { SecurityHeadersMiddleware } from './common/middleware/security-headers.middleware';
+import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware';
+import { IdempotencyMiddleware } from './common/middleware/idempotency.middleware';
 
 @Module({
   imports: [
@@ -46,7 +49,14 @@ import { RequestSizeLimitMiddleware } from './common/middleware/request-size-lim
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(CorrelationIdMiddleware, RateLimitMiddleware, RequestSizeLimitMiddleware)
+      .apply(
+        SecurityHeadersMiddleware,
+        RequestLoggerMiddleware,
+        CorrelationIdMiddleware,
+        IdempotencyMiddleware,
+        RateLimitMiddleware,
+        RequestSizeLimitMiddleware,
+      )
       .forRoutes('*');
   }
 }
