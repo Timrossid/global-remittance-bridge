@@ -8,7 +8,7 @@ describe('PaymentService.updateTransactionStatus', () => {
     merchant: { findUnique: vi.fn() },
   } as any;
   const stellarService = {} as any;
-  const notificationService = { sendWebhook: vi.fn() } as any;
+  const notificationService = { sendEmail: vi.fn(), sendWebhook: vi.fn() } as any;
   const sorobanService = {} as any;
 
   let service: PaymentService;
