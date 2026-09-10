@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
+import { APP_FILTER } from '@nestjs/core';
 import { HttpModule } from '@nestjs/axios';
 import { PrismaService } from './common/prisma.service';
 import { StellarService } from './common/stellar.service';
@@ -11,11 +12,10 @@ import { FeedbackModule } from './feedback/feedback.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
+import { RateLimitMiddleware } from './common/middleware/rate-limit.middleware';
 
-/**
- * Root application module for the Payment API.
- * Orchestrates all core modules and services.
- */
 @Module({
   imports: [
     HttpModule,
@@ -31,7 +31,21 @@ import { PassportModule } from '@nestjs/passport';
     NotificationModule,
     FeedbackModule,
   ],
-  providers: [PrismaService, StellarService, SorobanService],
+  providers: [
+    PrismaService,
+    StellarService,
+    SorobanService,
+    {
+      provide: APP_FILTER,
+      useClass: HttpExceptionFilter,
+    },
+  ],
   exports: [PrismaService, StellarService, SorobanService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(CorrelationIdMiddleware, RateLimitMiddleware)
+      .forRoutes('*');
+  }
+}

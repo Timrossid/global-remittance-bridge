@@ -24,22 +24,51 @@ function validateEnv() {
 validateEnv();
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: ['error', 'warn', 'log', 'debug', 'verbose'],
+  });
+
+  const corsOrigin = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim())
+    : '*';
 
   app.enableCors({
-    origin: process.env.CORS_ORIGIN || '*',
+    origin: corsOrigin,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Correlation-ID'],
+    credentials: true,
   });
+
+  app.setGlobalPrefix('api/v1');
 
   const httpAdapter = app.getHttpAdapter();
   httpAdapter.get('/health', (_req: any, res: any) => {
-    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+    res.status(200).json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+    });
   });
 
   const port = parseInt(process.env.PORT ?? '3001', 10);
-  await app.listen(port, '0.0.0.0');
+  const server = await app.listen(port, '0.0.0.0');
   console.log(`Payment API running on port ${port}`);
+
+  const gracefulShutdown = async (signal: string) => {
+    console.log(`Received ${signal}. Starting graceful shutdown...`);
+    await app.close();
+    server.close(() => {
+      console.log('HTTP server closed.');
+      process.exit(0);
+    });
+    setTimeout(() => {
+      console.error('Forced shutdown after timeout.');
+      process.exit(1);
+    }, 10000);
+  };
+
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 }
 
 bootstrap();
