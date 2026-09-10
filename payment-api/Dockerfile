@@ -1,41 +1,20 @@
-# ── Build stage ────────────────────────────────────────────────────────────────
-FROM node:18-alpine AS builder
-
+FROM node:20-alpine AS base
 WORKDIR /app
 
-RUN apk add --no-cache libc6-compat openssl
+FROM base AS deps
+COPY package.json package-lock.json ./
+RUN npm ci --only=production
 
-# Copy the full monorepo so cross-package imports (anchor-adapter) resolve
-COPY . .
+FROM base AS builder
+COPY package.json package-lock.json tsconfig.json ./
+COPY src ./src
+COPY prisma ./prisma
+RUN npm ci && npx prisma generate && npm run build
 
-WORKDIR /app/payment-api
-
-# Install all deps (including devDeps needed for build)
-RUN npm ci
-
-# Generate Prisma client
-RUN npx prisma generate
-
-# Build — output goes to /app/payment-api/dist/payment-api/src/main.js
-RUN npm run build
-
-# ── Production stage ───────────────────────────────────────────────────────────
-FROM node:18-alpine AS runner
-
-WORKDIR /app/payment-api
-
-RUN apk add --no-cache libc6-compat openssl
-
-# Copy only what's needed to run
-COPY --from=builder /app/payment-api/package*.json ./
-COPY --from=builder /app/payment-api/dist ./dist
-COPY --from=builder /app/payment-api/prisma ./prisma
-COPY --from=builder /app/payment-api/node_modules ./node_modules
-COPY --from=builder /app/payment-api/deploy.sh ./deploy.sh
-
-# Re-generate Prisma client for this platform
-RUN npx prisma generate && chmod +x deploy.sh
-
+FROM base AS runner
+ENV NODE_ENV production
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/prisma ./prisma
 EXPOSE 3001
-
-CMD ["sh", "deploy.sh"]
+CMD ["node", "dist/main.js"]
