@@ -7,15 +7,15 @@ import { SorobanService } from '../../src/common/soroban.service';
 
 describe('PaymentService.createEscrowPayment', () => {
   const prisma = {
-    merchant: { findUnique: jest.fn() },
-    transaction: { create: jest.fn() },
+    merchant: { findUnique: vi.fn() },
+    transaction: { create: vi.fn() },
   } as any;
   const stellarService = {} as any;
   const notificationService = {} as any;
   const sorobanService = {
-    callRPC: jest.fn(),
-    submitTransaction: jest.fn(),
-    getTransactionStatus: jest.fn(),
+    callRPC: vi.fn().mockResolvedValue({}),
+    submitTransaction: vi.fn().mockResolvedValue({ hash: 'txhash' }),
+    getTransactionStatus: vi.fn().mockResolvedValue({ status: 'SUCCESS' }),
   } as any;
 
   let service: PaymentService;
@@ -31,29 +31,24 @@ describe('PaymentService.createEscrowPayment', () => {
       ],
     }).compile();
     service = module.get(PaymentService);
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
-  it('throws when STELLAR_SECRET is not configured', async () => {
+  it('throws when STELLAR_SECRET is missing', async () => {
     delete process.env.STELLAR_SECRET;
-    await expect(
-      service.createEscrowPayment('GSRC', 'm1', 'CTOKEN', 100),
-    ).rejects.toThrow('STELLAR_SECRET is not configured');
+    await expect(service.createEscrowPayment('GSRC', 'm1', 'CTOKEN', 100)).rejects.toThrow('STELLAR_SECRET is not configured');
   });
 
-  it('resolves currency from token contract address (XLM for native)', async () => {
+  it('resolves currency from token contract address', async () => {
     process.env.STELLAR_SECRET = 'S'.repeat(56);
     process.env.STELLAR_NETWORK = 'testnet';
     process.env.SOROBAN_CONTRACT_ID = 'CCESCROW';
     process.env.SOROBAN_RPC_URL = 'https://soroban-testnet.stellar.org';
     prisma.merchant.findUnique.mockResolvedValue({ id: 'm1', walletAddress: 'GMER' });
-    sorobanService.callRPC.mockResolvedValue({});
-    sorobanService.submitTransaction.mockResolvedValue({ hash: 'txhash' });
-    sorobanService.getTransactionStatus.mockResolvedValue({ status: 'SUCCESS' });
     prisma.transaction.create.mockResolvedValue({ id: 'tx-1' });
-
     await service.createEscrowPayment('GSRC', 'm1', 'GABCDEFGHIJKLMNOPQRSTUVWXYZ', 100);
-    const createArg = prisma.transaction.create.mock.calls[0][0];
-    expect(createArg.data.currency).toBe('GABCDEFG');
+    expect(prisma.transaction.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ currency: 'GABCDEFG' }),
+    });
   });
 });
