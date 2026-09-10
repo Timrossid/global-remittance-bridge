@@ -7,11 +7,11 @@ import { SorobanService } from '../../src/common/soroban.service';
 
 describe('PaymentService.initiateStellarTransfer', () => {
   const prisma = {
-    merchant: { findUnique: jest.fn() },
-    transaction: { create: jest.fn(), update: jest.fn() },
+    merchant: { findUnique: vi.fn() },
+    transaction: { create: vi.fn(), update: vi.fn() },
   } as any;
-  const stellarService = { buildPaymentTransaction: jest.fn(), submitTransaction: jest.fn() } as any;
-  const notificationService = { sendEmail: jest.fn() } as any;
+  const stellarService = { buildPaymentTransaction: vi.fn(), submitTransaction: vi.fn() } as any;
+  const notificationService = { sendEmail: vi.fn() } as any;
   const sorobanService = {} as any;
 
   let service: PaymentService;
@@ -27,14 +27,12 @@ describe('PaymentService.initiateStellarTransfer', () => {
       ],
     }).compile();
     service = module.get(PaymentService);
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('throws when STELLAR_SECRET is missing', async () => {
     delete process.env.STELLAR_SECRET;
-    await expect(
-      service.initiateStellarTransfer('m1', 'c1', 10),
-    ).rejects.toThrow('STELLAR_SECRET is not configured');
+    await expect(service.initiateStellarTransfer('m1', 'c1', 10)).rejects.toThrow('STELLAR_SECRET is not configured');
   });
 
   it('marks transaction FAILED on Stellar error', async () => {
@@ -42,13 +40,8 @@ describe('PaymentService.initiateStellarTransfer', () => {
     prisma.merchant.findUnique.mockResolvedValue({ id: 'm1', walletAddress: 'GMER', email: 'm@test.com' });
     prisma.transaction.create.mockResolvedValue({ id: 'tx-1', status: 'PENDING' });
     stellarService.buildPaymentTransaction.mockRejectedValue(new Error('Horizon error'));
-    await expect(
-      service.initiateStellarTransfer('m1', 'c1', 10),
-    ).rejects.toThrow('Horizon error');
-    expect(prisma.transaction.update).toHaveBeenCalledWith({
-      where: { id: 'tx-1' },
-      data: { status: 'FAILED' },
-    });
+    await expect(service.initiateStellarTransfer('m1', 'c1', 10)).rejects.toThrow('Horizon error');
+    expect(prisma.transaction.update).toHaveBeenCalledWith({ where: { id: 'tx-1' }, data: { status: 'FAILED' } });
   });
 
   it('sends notification email on success', async () => {
