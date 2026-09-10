@@ -1,10 +1,10 @@
 import { verifyWebhookSignature } from '../../src/common/webhooks/signature.verifier';
 
 describe('verifyWebhookSignature', () => {
-  const payload = '{"event":"payment.completed"}';
+  const payload = '{"event":"test"}';
   const secret = 'whsec_test';
 
-  it('returns true for valid HMAC-SHA256 signature', () => {
+  it('returns true for valid HMAC-SHA256', () => {
     const crypto = require('crypto');
     const sig = crypto.createHmac('sha256', secret).update(payload).digest('hex');
     expect(verifyWebhookSignature(payload, sig, secret)).toBe(true);
