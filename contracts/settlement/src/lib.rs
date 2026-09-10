@@ -1,16 +1,17 @@
 #![no_std]
-use soroban_sdk::{contract, contractimpl, symbol_short, token, Address, Env};
+use soroban_sdk::{contract, contractimpl, symbol_short, token, Address, Env, Symbol};
 
-/// Protocol fee basis points: 50 = 0.5%
 const FEE_BPS: i128 = 50;
 const BPS_DENOMINATOR: i128 = 10_000;
+
+const TOPIC_SETTLED: Symbol = symbol_short!("settled");
+const TOPIC_FEES_DISTRIBUTED: Symbol = symbol_short!("fees_dist");
 
 #[contract]
 pub struct SettlementContract;
 
 #[contractimpl]
 impl SettlementContract {
-    /// Initializes the contract with an admin address (call once after deploy).
     pub fn initialize(env: Env, admin: Address) {
         if env.storage().instance().has(&symbol_short!("admin")) {
             panic!("Already initialized");
@@ -19,24 +20,18 @@ impl SettlementContract {
         env.storage()
             .instance()
             .set(&symbol_short!("admin"), &admin);
+        env.events().publish((Symbol::short("init"),), admin);
     }
 
-    /// Processes a merchant settlement, deducting the protocol fee.
-    ///
-    /// - `sender`   : account funding this settlement (must sign)
-    /// - `merchant` : merchant wallet receiving the net amount
-    /// - `treasury` : protocol treasury receiving the 0.5% fee
-    /// - `token`    : Soroban token contract address (e.g. USDC)
-    /// - `amount`   : gross amount in token stroops
     pub fn process_settlement(
         env: Env,
-        sender: Address,
+        caller: Address,
         merchant: Address,
         treasury: Address,
         token: Address,
         amount: i128,
     ) {
-        sender.require_auth();
+        Self::require_authorized_caller(&env, &caller);
 
         if amount <= 0 {
             panic!("Amount must be positive");
@@ -46,16 +41,12 @@ impl SettlementContract {
         let net = amount - fee;
 
         let client = token::Client::new(&env, &token);
+        client.transfer(&caller, &merchant, &net);
 
-        // Transfer net amount to the merchant
-        client.transfer(&sender, &merchant, &net);
-
-        // Transfer protocol fee to the treasury
         if fee > 0 {
-            client.transfer(&sender, &treasury, &fee);
+            client.transfer(&caller, &treasury, &fee);
         }
 
-        // Persist last settlement data for off-chain indexers / view callers
         env.storage()
             .instance()
             .set(&symbol_short!("last_amt"), &amount);
@@ -65,10 +56,13 @@ impl SettlementContract {
         env.storage()
             .instance()
             .set(&symbol_short!("last_fee"), &fee);
+
+        env.events().publish(
+            (TOPIC_SETTLED,),
+            (caller, merchant, treasury, token, amount, net, fee),
+        );
     }
 
-    /// Distributes protocol fees held by this contract to the treasury.
-    /// Only callable by the admin set during `initialize`.
     pub fn distribute_fees(
         env: Env,
         admin: Address,
@@ -94,9 +88,11 @@ impl SettlementContract {
 
         let client = token::Client::new(&env, &token);
         client.transfer(&env.current_contract_address(), &treasury, &fee_amount);
+
+        env.events()
+            .publish((TOPIC_FEES_DISTRIBUTED,), (admin, treasury, fee_amount));
     }
 
-    /// Returns (gross_amount, net_amount, fee) from the last settlement.
     pub fn get_last_settlement(env: Env) -> (i128, i128, i128) {
         let amount: i128 = env
             .storage()
@@ -116,9 +112,22 @@ impl SettlementContract {
         (amount, net, fee)
     }
 
-    /// Returns the current fee rate in basis points (50 = 0.5%).
     pub fn get_fee_bps(_env: Env) -> i128 {
         FEE_BPS
+    }
+
+    fn require_authorized_caller(env: &Env, caller: &Address) {
+        if !env.storage().instance().has(&symbol_short!("admin")) {
+            panic!("Contract not initialized");
+        }
+        let admin: Address = env
+            .storage()
+            .instance()
+            .get(&symbol_short!("admin"))
+            .expect("Contract not initialized");
+        if caller != &admin {
+            panic!("Unauthorized: caller is not the registered admin");
+        }
     }
 }
 
