@@ -15,6 +15,7 @@ import { PassportModule } from '@nestjs/passport';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
 import { RateLimitMiddleware } from './common/middleware/rate-limit.middleware';
+import { RequestSizeLimitMiddleware } from './common/middleware/request-size-limit.middleware';
 
 @Module({
   imports: [
@@ -45,7 +46,7 @@ import { RateLimitMiddleware } from './common/middleware/rate-limit.middleware';
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(CorrelationIdMiddleware, RateLimitMiddleware)
+      .apply(CorrelationIdMiddleware, RateLimitMiddleware, RequestSizeLimitMiddleware)
       .forRoutes('*');
   }
 }
