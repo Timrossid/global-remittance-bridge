@@ -202,3 +202,51 @@ fn refund_returns_tokens_to_sender_and_prevents_second_refund() {
     }))
     .is_err());
 }
+
+#[test]
+fn get_version_returns_contract_version() {
+    let env = Env::default();
+    let admin = Address::generate(&env);
+    let contract_id = env.register(EscrowContract, ());
+    let escrow = EscrowContractClient::new(&env, &contract_id);
+    escrow.initialize(&admin);
+    assert_eq!(escrow.get_version(), 1);
+}
+
+#[test]
+fn get_escrow_status_returns_pending_after_creation() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let sender = Address::generate(&env);
+    let receiver = Address::generate(&env);
+    let admin = Address::generate(&env);
+    let token_admin = Address::generate(&env);
+    let token = setup_token(&env, &token_admin);
+    StellarAssetClient::new(&env, &token).mint(&sender, &100);
+    let contract_id = env.register(EscrowContract, ());
+    let escrow = EscrowContractClient::new(&env, &contract_id);
+    escrow.initialize(&admin);
+    let escrow_id = escrow.create_escrow(&sender, &receiver, &token, &100);
+    assert_eq!(escrow.get_escrow_status(escrow_id), 0);
+}
+
+#[test]
+fn expire_escrow_returns_funds_to_sender() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let sender = Address::generate(&env);
+    let receiver = Address::generate(&env);
+    let admin = Address::generate(&env);
+    let token_admin = Address::generate(&env);
+    let token = setup_token(&env, &token_admin);
+    StellarAssetClient::new(&env, &token).mint(&sender, &200);
+    let contract_id = env.register(EscrowContract, ());
+    let escrow = EscrowContractClient::new(&env, &contract_id);
+    escrow.initialize(&admin);
+    let escrow_id = escrow.create_escrow(&sender, &receiver, &token, &200);
+    let balances = TokenClient::new(&env, &token);
+    escrow.expire_escrow(&admin, &escrow_id);
+    assert_eq!(escrow.get_escrow_status(escrow_id), 3);
+    assert_eq!(balances.balance(&sender), 200);
+}
+

@@ -89,3 +89,38 @@ fn process_settlement_rejects_non_positive_amounts() {
     }))
     .is_err());
 }
+
+#[test]
+fn get_version_returns_contract_version() {
+    let env = Env::default();
+    let admin = Address::generate(&env);
+    let contract_id = env.register(SettlementContract, ());
+    let settlement = SettlementContractClient::new(&env, &contract_id);
+    settlement.initialize(&admin);
+    assert_eq!(settlement.get_version(), 1);
+}
+
+#[test]
+fn add_admin_extends_authorized_callers() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let admin = Address::generate(&env);
+    let second_admin = Address::generate(&env);
+    let third_admin = Address::generate(&env);
+    let merchant = Address::generate(&env);
+    let treasury = Address::generate(&env);
+    let token_admin = Address::generate(&env);
+    let token = setup_token(&env, &token_admin);
+    let contract_id = env.register(SettlementContract, ());
+    let settlement = SettlementContractClient::new(&env, &contract_id);
+
+    settlement.initialize(&admin);
+    settlement.add_admin(&admin, &second_admin);
+
+    StellarAssetClient::new(&env, &token).mint(&second_admin, &10_000);
+    settlement.process_settlement(&second_admin, &merchant, &treasury, &token, &10_000);
+    let balances = TokenClient::new(&env, &token);
+    assert_eq!(balances.balance(&merchant), 9_950);
+    assert_eq!(balances.balance(&treasury), 50);
+}
+
