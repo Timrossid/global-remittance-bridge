@@ -2,13 +2,13 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { PaymentService } from '../../src/payments/payment.service';
 import { PrismaService } from '../../src/common/prisma.service';
 
-describe('PaymentService.updateTransactionStatus (COMPLETED webhook)', () => {
+describe('PaymentService.updateTransactionStatus', () => {
   const prisma = {
-    transaction: { update: jest.fn() },
-    merchant: { findUnique: jest.fn() },
+    transaction: { update: vi.fn() },
+    merchant: { findUnique: vi.fn() },
   } as any;
   const stellarService = {} as any;
-  const notificationService = { sendEmail: jest.fn(), sendWebhook: jest.fn() } as any;
+  const notificationService = { sendWebhook: vi.fn() } as any;
   const sorobanService = {} as any;
 
   let service: PaymentService;
@@ -24,10 +24,14 @@ describe('PaymentService.updateTransactionStatus (COMPLETED webhook)', () => {
       ],
     }).compile();
     service = module.get(PaymentService);
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
-  it('fires webhook when status is COMPLETED and WEBHOOK_BASE_URL is set', async () => {
+  it('rejects invalid status values', async () => {
+    await expect(service.updateTransactionStatus('tx-1', 'BAD' as any)).rejects.toThrow('Invalid status');
+  });
+
+  it('fires webhook when COMPLETED and WEBHOOK_BASE_URL is set', async () => {
     process.env.WEBHOOK_BASE_URL = 'https://example.com';
     prisma.transaction.update.mockResolvedValue({ id: 'tx-1', status: 'COMPLETED', merchantId: 'm1' });
     prisma.merchant.findUnique.mockResolvedValue({ id: 'm1', email: 'm@test.com' });
