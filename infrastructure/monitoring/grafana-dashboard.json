@@ -1,0 +1,16 @@
+{
+  "dashboard": {
+    "title": "Remittance Bridge Monitoring",
+    "panels": [
+      {
+        "title": "Request Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total[5m])"
+          }
+        ]
+      }
+    ]
+  }
+}
