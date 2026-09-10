@@ -15,6 +15,12 @@ const TOPIC_ESCROW_CREATED: Symbol = symbol_short!("escrow_created");
 const TOPIC_ESCROW_RELEASED: Symbol = symbol_short!("escrow_released");
 const TOPIC_ESCROW_REFUNDED: Symbol = symbol_short!("escrow_refunded");
 
+const CONTRACT_VERSION: u32 = 1;
+const STATUS_PENDING: u32 = 0;
+const STATUS_RELEASED: u32 = 1;
+const STATUS_REFUNDED: u32 = 2;
+const STATUS_EXPIRED: u32 = 3;
+
 #[contractimpl]
 impl EscrowContract {
     pub fn initialize(env: Env, admin: Address) {
@@ -78,7 +84,7 @@ impl EscrowContract {
             .set(&(escrow_id, symbol_short!("amount")), &amount);
         env.storage()
             .persistent()
-            .set(&(escrow_id, symbol_short!("status")), &0u32);
+            .set(&(escrow_id, symbol_short!("status")), &STATUS_PENDING);
         Self::extend_escrow_ttl(&env, escrow_id);
         Self::extend_next_id_ttl(&env);
 
@@ -100,7 +106,7 @@ impl EscrowContract {
             .get(&(escrow_id, symbol_short!("status")))
             .expect("Escrow not found");
 
-        if status != 0 {
+        if status != STATUS_PENDING {
             panic!("Escrow is not in pending state");
         }
 
@@ -125,7 +131,8 @@ impl EscrowContract {
 
         env.storage()
             .persistent()
-            .set(&(escrow_id, symbol_short!("status")), &1u32);
+            .set(&(escrow_id, symbol_short!("status")), &STATUS_RELEASED);
+        Self::remove_escrow_data(&env, escrow_id);
 
         env.events().publish(
             (TOPIC_ESCROW_RELEASED,),
@@ -144,7 +151,7 @@ impl EscrowContract {
             .get(&(escrow_id, symbol_short!("status")))
             .expect("Escrow not found");
 
-        if status != 0 {
+        if status != STATUS_PENDING {
             panic!("Escrow is not in pending state");
         }
 
@@ -169,10 +176,64 @@ impl EscrowContract {
 
         env.storage()
             .persistent()
-            .set(&(escrow_id, symbol_short!("status")), &2u32);
+            .set(&(escrow_id, symbol_short!("status")), &STATUS_REFUNDED);
+        Self::remove_escrow_data(&env, escrow_id);
 
         env.events()
             .publish((TOPIC_ESCROW_REFUNDED,), (escrow_id, sender, amount));
+    }
+
+    pub fn expire_escrow(env: Env, admin: Address, escrow_id: u64) {
+        admin.require_auth();
+        Self::require_admin(&env, &admin);
+        Self::extend_escrow_ttl(&env, escrow_id);
+
+        let status: u32 = env
+            .storage()
+            .persistent()
+            .get(&(escrow_id, symbol_short!("status")))
+            .expect("Escrow not found");
+
+        if status != STATUS_PENDING {
+            panic!("Escrow is not in pending state");
+        }
+
+        let sender: Address = env
+            .storage()
+            .persistent()
+            .get(&(escrow_id, symbol_short!("sender")))
+            .expect("Sender not found");
+        let token: Address = env
+            .storage()
+            .persistent()
+            .get(&(escrow_id, symbol_short!("token")))
+            .expect("Token not found");
+        let amount: i128 = env
+            .storage()
+            .persistent()
+            .get(&(escrow_id, symbol_short!("amount")))
+            .expect("Amount not found");
+
+        let client = token::Client::new(&env, &token);
+        client.transfer(&env.current_contract_address(), &sender, &amount);
+
+        env.storage()
+            .persistent()
+            .set(&(escrow_id, symbol_short!("status")), &STATUS_EXPIRED);
+        Self::remove_escrow_data(&env, escrow_id);
+    }
+
+    pub fn get_escrow_status(env: Env, escrow_id: u64) -> u32 {
+        let status: u32 = env
+            .storage()
+            .persistent()
+            .get(&(escrow_id, symbol_short!("status")))
+            .unwrap_or(u32::MAX);
+        status
+    }
+
+    pub fn get_version(_env: Env) -> u32 {
+        CONTRACT_VERSION
     }
 
     fn ensure_initialized(env: &Env) {
@@ -221,6 +282,18 @@ impl EscrowContract {
                 PERSISTENT_TTL_THRESHOLD,
                 PERSISTENT_TTL_EXTEND_TO,
             );
+        }
+    }
+
+    fn remove_escrow_data(env: &Env, escrow_id: u64) {
+        for field in [
+            symbol_short!("sender"),
+            symbol_short!("receiver"),
+            symbol_short!("token"),
+            symbol_short!("amount"),
+            symbol_short!("status"),
+        ] {
+            env.storage().persistent().remove(&(escrow_id, field));
         }
     }
 }
