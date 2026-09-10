@@ -1,15 +1,17 @@
-import { Controller, Get, Post, Body, Param, Put, UseGuards, Request, UsePipes, ValidationPipe } from '@nestjs/common';
-import { MerchantService } from './merchant.service';
+import { Controller, Get, Post, Body, UseGuards, Request } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { CreateMerchantDto, UpdateKycDto } from './dto/merchant.dto';
+import { MerchantService } from './merchant.service';
+import { PaginationService } from '../common/services/pagination.service';
 
 @Controller('merchants')
 export class MerchantController {
-  constructor(private readonly merchantService: MerchantService) {}
+  constructor(
+    private readonly merchantService: MerchantService,
+    private readonly paginationService: PaginationService,
+  ) {}
 
   @Post('onboard')
-  @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
-  async onboard(@Body() createMerchantDto: CreateMerchantDto) {
+  async onboard(@Body() createMerchantDto: any) {
     return this.merchantService.createMerchant(createMerchantDto);
   }
 
@@ -33,14 +35,13 @@ export class MerchantController {
 
   @UseGuards(JwtAuthGuard)
   @Get('me/transactions')
-  async getTransactions(@Request() req) {
-    return this.merchantService.getTransactions(req.user.userId);
+  async getTransactions(@Request() req, @Query('page') page = '1', @Query('limit') limit = '20') {
+    return this.merchantService.getTransactions(req.user.userId, +page, +limit);
   }
 
   @UseGuards(JwtAuthGuard)
   @Put(':id/kyc')
-  @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
-  async updateKyc(@Param('id') id: string, @Body() data: UpdateKycDto) {
-    return this.merchantService.updateKycStatus(id, data.status);
+  async updateKyc(@Param('id') id: string, @Body('status') status: string) {
+    return this.merchantService.updateKycStatus(id, status);
   }
 }
