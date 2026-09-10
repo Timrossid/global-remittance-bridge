@@ -64,3 +64,26 @@ stellar-accounts/
 
 # ─── Vercel / deployment ─────────────────────────────────────────────────────
 .vercel
+
+# SDK
+sdk/dist/
+sdk/node_modules/
+
+# demo-app
+demo-app/.next/
+demo-app/node_modules/
+
+# notification-service
+notification-service/node_modules/
+
+# transaction-indexer
+transaction-indexer/dist/
+transaction-indexer/node_modules/
+
+# website
+website/.next/
+website/node_modules/
+
+# Test artifacts
+payment-api/test-results/
+payment-api/coverage/
