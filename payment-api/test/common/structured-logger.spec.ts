@@ -2,37 +2,33 @@ import { StructuredLogger } from '../../src/common/utils/structured-logger.util'
 
 describe('StructuredLogger', () => {
   let logs: string[];
-  let originalLog: typeof console.log;
-  let originalWarn: typeof console.warn;
-  let originalError: typeof console.error;
+  const original = { log: console.log, warn: console.warn, error: console.error };
 
   beforeEach(() => {
     logs = [];
-    originalLog = console.log;
-    originalWarn = console.warn;
-    originalError = console.error;
-    console.log = (...args) => logs.push(args.join(' '));
-    console.warn = (...args) => logs.push(args.join(' '));
-    console.error = (...args) => logs.push(args.join(' '));
+    console.log = (...args: any[]) => logs.push(JSON.stringify(args));
+    console.warn = (...args: any[]) => logs.push(JSON.stringify(args));
+    console.error = (...args: any[]) => logs.push(JSON.stringify(args));
   });
 
   afterEach(() => {
-    console.log = originalLog;
-    console.warn = originalWarn;
-    console.error = originalError;
+    console.log = original.log;
+    console.warn = original.warn;
+    console.error = original.error;
   });
 
-  it('logs info as JSON with context', () => {
-    const logger = new StructuredLogger('TestCtx');
-    logger.info('hello', { key: 'value' });
-    const parsed = JSON.parse(logs[0]);
-    expect(parsed.context).toBe('TestCtx');
-    expect(parsed.message).toBe('hello');
-    expect(parsed.key).toBe('value');
+  it('logs info with context', () => {
+    const logger = new StructuredLogger('Test');
+    logger.info('hello', { key: 1 });
+    const entry = JSON.parse(logs[0]);
+    expect(entry.level).toBe('info');
+    expect(entry.context).toBe('Test');
+    expect(entry.message).toBe('hello');
+    expect(entry.key).toBe(1);
   });
 
   it('logs warn and error', () => {
-    const logger = new StructuredLogger('WarnCtx');
+    const logger = new StructuredLogger('Ctx');
     logger.warn('warn msg');
     logger.error('err msg');
     expect(logs[1]).toContain('"level":"warn"');
@@ -42,8 +38,8 @@ describe('StructuredLogger', () => {
   it('suppresses debug in production', () => {
     const prev = process.env.NODE_ENV;
     process.env.NODE_ENV = 'production';
-    const logger = new StructuredLogger('DebugCtx');
-    logger.debug('should not appear');
+    const logger = new StructuredLogger('D');
+    logger.debug('secret');
     expect(logs).toHaveLength(0);
     process.env.NODE_ENV = prev;
   });
