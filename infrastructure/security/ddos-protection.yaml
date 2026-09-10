@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ddos-protection
+  namespace: remittance-bridge
+data:
+  ddos-rules.conf: |
+    # Global Remittance Bridge DDoS Protection Rules
+
+    # Rate limiting
+    SecAction "id:9000,phase:1,nolog,pass,t:none,setvar:tx.request_count=1"
+    SecRule REQUEST_HEADERS:X-Forwarded-For "@detectSQLi" "id:9001,phase:1,nolog,pass,t:none,setvar:tx.request_count=+1"
+    SecRule TX:request_count "@gt 100" "id:9002,phase:1,log,deny,status:429,msg:'Rate limit exceeded'"
+
+    # Connection limiting
+    SecRule REMOTE_ADDR "@detectXSS" "id:9003,phase:1,nolog,pass,t:none,setvar:ip.conn_count=+1"
+    SecRule IP:CONN_COUNT "@gt 50" "id:9004,phase:1,log,deny,status:429,msg:'Connection limit exceeded'"
+
+    # Geographic blocking (example - customize as needed)
+    # SecRule REMOTE_ADDR "@geoLookup" "id:9005,phase:1,nolog,pass,t:none,setvar:tx.geo_country=%{geo.country_code}"
+    # SecRule TX:GEO_COUNTRY "@streq XX" "id:9006,phase:1,log,deny,status:403,msg:'Blocked country'"
