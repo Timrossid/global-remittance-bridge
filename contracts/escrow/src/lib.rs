@@ -1,5 +1,5 @@
 #![no_std]
-use soroban_sdk::{contract, contractimpl, symbol_short, token, Address, Env};
+use soroban_sdk::{contract, contractimpl, symbol_short, token, Address, Env, Symbol};
 
 #[contract]
 pub struct EscrowContract;
@@ -9,9 +9,14 @@ const INSTANCE_TTL_EXTEND_TO: u32 = 100_000;
 const PERSISTENT_TTL_THRESHOLD: u32 = 1_000;
 const PERSISTENT_TTL_EXTEND_TO: u32 = 100_000;
 
+const TOPIC_INITIALIZED: Symbol = symbol_short!("init");
+const TOPIC_ADMIN_TRANSFERRED: Symbol = symbol_short!("admin_xfer");
+const TOPIC_ESCROW_CREATED: Symbol = symbol_short!("escrow_created");
+const TOPIC_ESCROW_RELEASED: Symbol = symbol_short!("escrow_released");
+const TOPIC_ESCROW_REFUNDED: Symbol = symbol_short!("escrow_refunded");
+
 #[contractimpl]
 impl EscrowContract {
-    /// Sets the one-time administrator used for release and refund actions.
     pub fn initialize(env: Env, admin: Address) {
         if env.storage().instance().has(&symbol_short!("admin")) {
             panic!("Already initialized");
@@ -21,9 +26,9 @@ impl EscrowContract {
             .instance()
             .set(&symbol_short!("admin"), &admin);
         Self::extend_instance_ttl(&env);
+        env.events().publish((TOPIC_INITIALIZED,), admin);
     }
 
-    /// Transfers administrative control to a new address.
     pub fn transfer_admin(env: Env, current_admin: Address, new_admin: Address) {
         current_admin.require_auth();
         Self::require_admin(&env, &current_admin);
@@ -32,11 +37,10 @@ impl EscrowContract {
             .instance()
             .set(&symbol_short!("admin"), &new_admin);
         Self::extend_instance_ttl(&env);
+        env.events()
+            .publish((TOPIC_ADMIN_TRANSFERRED, current_admin, new_admin), ());
     }
 
-    /**
-     * Creates a new escrow instance and locks the specified amount of tokens.
-     */
     pub fn create_escrow(
         env: Env,
         sender: Address,
@@ -47,11 +51,9 @@ impl EscrowContract {
         sender.require_auth();
         Self::ensure_initialized(&env);
 
-        // Transfer tokens from sender to the contract (this contract's address)
         let client = token::Client::new(&env, &token);
         client.transfer(&sender, env.current_contract_address(), &amount);
 
-        // Generate a unique escrow ID
         let escrow_id = env
             .storage()
             .persistent()
@@ -62,7 +64,6 @@ impl EscrowContract {
             .persistent()
             .set(&symbol_short!("next_id"), &next_id);
 
-        // Store escrow details using individual keys
         env.storage()
             .persistent()
             .set(&(escrow_id, symbol_short!("sender")), &sender);
@@ -77,16 +78,17 @@ impl EscrowContract {
             .set(&(escrow_id, symbol_short!("amount")), &amount);
         env.storage()
             .persistent()
-            .set(&(escrow_id, symbol_short!("status")), &0u32); // 0 = Pending
+            .set(&(escrow_id, symbol_short!("status")), &0u32);
         Self::extend_escrow_ttl(&env, escrow_id);
         Self::extend_next_id_ttl(&env);
 
+        env.events().publish(
+            (TOPIC_ESCROW_CREATED,),
+            (escrow_id, sender, receiver, token, amount),
+        );
         escrow_id
     }
 
-    /**
-     * Releases the escrowed funds to the designated receiver.
-     */
     pub fn release_funds(env: Env, admin: Address, escrow_id: u64) {
         admin.require_auth();
         Self::require_admin(&env, &admin);
@@ -118,19 +120,19 @@ impl EscrowContract {
             .get(&(escrow_id, symbol_short!("amount")))
             .expect("Amount not found");
 
-        // Transfer tokens from the contract to the receiver
         let client = token::Client::new(&env, &token);
         client.transfer(&env.current_contract_address(), &receiver, &amount);
 
-        // Update status
         env.storage()
             .persistent()
-            .set(&(escrow_id, symbol_short!("status")), &1u32); // 1 = Released
+            .set(&(escrow_id, symbol_short!("status")), &1u32);
+
+        env.events().publish(
+            (TOPIC_ESCROW_RELEASED,),
+            (escrow_id, receiver, amount),
+        );
     }
 
-    /**
-     * Returns the escrowed funds back to the original sender.
-     */
     pub fn refund_funds(env: Env, admin: Address, escrow_id: u64) {
         admin.require_auth();
         Self::require_admin(&env, &admin);
@@ -162,14 +164,15 @@ impl EscrowContract {
             .get(&(escrow_id, symbol_short!("amount")))
             .expect("Amount not found");
 
-        // Transfer tokens from the contract back to the sender
         let client = token::Client::new(&env, &token);
         client.transfer(&env.current_contract_address(), &sender, &amount);
 
-        // Update status
         env.storage()
             .persistent()
-            .set(&(escrow_id, symbol_short!("status")), &2u32); // 2 = Refunded
+            .set(&(escrow_id, symbol_short!("status")), &2u32);
+
+        env.events()
+            .publish((TOPIC_ESCROW_REFUNDED,), (escrow_id, sender, amount));
     }
 
     fn ensure_initialized(env: &Env) {
