@@ -106,7 +106,6 @@ fn add_admin_extends_authorized_callers() {
     env.mock_all_auths();
     let admin = Address::generate(&env);
     let second_admin = Address::generate(&env);
-    let third_admin = Address::generate(&env);
     let merchant = Address::generate(&env);
     let treasury = Address::generate(&env);
     let token_admin = Address::generate(&env);
@@ -123,4 +122,3 @@ fn add_admin_extends_authorized_callers() {
     assert_eq!(balances.balance(&merchant), 9_950);
     assert_eq!(balances.balance(&treasury), 50);
 }
-
