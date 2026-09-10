@@ -5,14 +5,14 @@ describe('WebhookQueueService', () => {
   let service: WebhookQueueService;
 
   beforeEach(async () => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
       providers: [WebhookQueueService],
     }).compile();
     service = module.get(WebhookQueueService);
   });
 
-  it('is instantiable without Redis', () => {
+  it('instantiates without a live Redis connection', () => {
     expect(service).toBeDefined();
   });
 });
