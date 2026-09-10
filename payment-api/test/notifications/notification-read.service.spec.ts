@@ -1,26 +1,21 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotificationReadService } from '../../src/notifications/notification-read.service';
 import { PrismaService } from '../../src/common/prisma.service';
+import { NotFoundException } from '@nestjs/common';
 
 describe('NotificationReadService', () => {
-  let service: NotificationReadService;
   const prisma = {
-    notification: {
-      findFirst: jest.fn(),
-      update: jest.fn(),
-      updateMany: jest.fn(),
-      count: jest.fn(),
-    },
+    notification: { findFirst: vi.fn(), update: vi.fn(), updateMany: vi.fn(), count: vi.fn() },
   } as any;
+  let service: NotificationReadService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [{ provide: PrismaService, useValue: prisma }, NotificationReadService],
     }).compile();
     service = module.get(NotificationReadService);
+    vi.clearAllMocks();
   });
-
-  afterEach(() => jest.clearAllMocks());
 
   it('marks a single notification as read', async () => {
     prisma.notification.findFirst.mockResolvedValue({ id: 'n1' });
@@ -29,7 +24,12 @@ describe('NotificationReadService', () => {
     expect(result.read).toBe(true);
   });
 
-  it('marks all notifications as read for a user', async () => {
+  it('throws NotFoundException for unknown notification', async () => {
+    prisma.notification.findFirst.mockResolvedValue(null);
+    await expect(service.markRead('user-1', 'missing')).rejects.toThrow(NotFoundException);
+  });
+
+  it('marks all as read and returns count', async () => {
     prisma.notification.updateMany.mockResolvedValue({ count: 3 });
     const result = await service.markAllRead('user-1');
     expect(result.count).toBe(3);
