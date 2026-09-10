@@ -6,11 +6,15 @@ import { NotificationService } from '../../src/notifications/notification.servic
 import { SorobanService } from '../../src/common/soroban.service';
 
 describe('PaymentService', () => {
+  const prisma = {
+    transaction: { create: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
+    merchant: { findUnique: vi.fn() },
+  } as any;
+  const stellarService = { buildPaymentTransaction: vi.fn(), submitTransaction: vi.fn() } as any;
+  const notificationService = { sendEmail: vi.fn(), sendWebhook: vi.fn() } as any;
+  const sorobanService = { callRPC: vi.fn(), submitTransaction: vi.fn(), getTransactionStatus: vi.fn() } as any;
+
   let service: PaymentService;
-  const prisma = { transaction: { create: jest.fn(), findUnique: jest.fn(), update: jest.fn() }, merchant: { findUnique: jest.fn() } } as any;
-  const stellarService = { buildPaymentTransaction: jest.fn(), submitTransaction: jest.fn() } as any;
-  const notificationService = { sendEmail: jest.fn(), sendWebhook: jest.fn() } as any;
-  const sorobanService = { callRPC: jest.fn(), submitTransaction: jest.fn(), getTransactionStatus: jest.fn() } as any;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -22,11 +26,9 @@ describe('PaymentService', () => {
         { provide: SorobanService, useValue: sorobanService },
       ],
     }).compile();
-
     service = module.get(PaymentService);
+    vi.clearAllMocks();
   });
-
-  afterEach(() => jest.clearAllMocks());
 
   it('creates a payment record', async () => {
     prisma.transaction.create.mockResolvedValue({ id: 'tx-1', amount: 100, status: 'PENDING' });
@@ -38,7 +40,6 @@ describe('PaymentService', () => {
   it('updates transaction status to COMPLETED and notifies merchant', async () => {
     prisma.transaction.update.mockResolvedValue({ id: 'tx-1', status: 'COMPLETED' });
     prisma.merchant.findUnique.mockResolvedValue({ id: 'm1', email: 'm@test.com' });
-
     const result = await service.updateTransactionStatus('tx-1', 'COMPLETED');
     expect(result.status).toBe('COMPLETED');
     expect(prisma.transaction.update).toHaveBeenCalledWith({ where: { id: 'tx-1' }, data: { status: 'COMPLETED' } });
@@ -47,7 +48,6 @@ describe('PaymentService', () => {
   it('getMerchantTransactions returns ordered list capped at 100', async () => {
     const txs = Array.from({ length: 100 }, (_, i) => ({ id: `tx-${i}` })).reverse();
     prisma.transaction.findMany.mockResolvedValue(txs);
-
     const result = await service.getMerchantTransactions('m1');
     expect(prisma.transaction.findMany).toHaveBeenCalledWith({
       where: { merchantId: 'm1' },
