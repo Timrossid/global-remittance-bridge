@@ -1,6 +1,7 @@
 import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { APP_FILTER } from '@nestjs/core';
 import { HttpModule } from '@nestjs/axios';
+import { MulterModule } from '@nestjs/platform-express';
 import { PrismaService } from './common/prisma.service';
 import { StellarService } from './common/stellar.service';
 import { SorobanService } from './common/soroban.service';
@@ -27,6 +28,11 @@ import { IdempotencyMiddleware } from './common/middleware/idempotency.middlewar
     JwtModule.register({
       secret: process.env.JWT_SECRET || '',
       signOptions: { expiresIn: '7d' },
+    }),
+    MulterModule.register({
+      limits: {
+        fileSize: 5 * 1024 * 1024,
+      },
     }),
     AuthModule,
     MerchantModule,
