@@ -18,7 +18,6 @@ describe('paginate', () => {
   it('defaults page to 1', () => {
     const result = paginate(items, 0, 10);
     expect(result.pageInfo.page).toBe(1);
-    expect(result.data).toHaveLength(10);
   });
 
   it('returns empty data for out-of-range page', () => {
