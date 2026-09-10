@@ -1,20 +1,27 @@
-# 🔌 Anchor Adapter
+# Anchor Adapter
 
-Integration layer that standardizes communication with various Stellar Anchors.
+Adapter pattern for fiat on/off-ramp providers (Circle, MoneyGram, etc.).
 
-## 🎯 Purpose
-Every anchor (Circle, MoneyGram, etc.) has a different API. This repository provides a unified interface so the `payment-api` doesn't need to handle anchor-specific logic.
+## Structure
 
-## 🛠️ Architecture
-Using the **Adapter Pattern**, we define a common interface `IAnchorAdapter`:
-- `getQuote()`: Standardized FX pricing.
-- `initiateDeposit()`: Uniform deposit flow.
-- `initiateWithdrawal()`: Uniform withdrawal flow.
-- `checkKycStatus()`: Unified KYC verification.
+| Path | Purpose |
+|------|---------|
+| `src/shared/` | Common interfaces (AnchorAdapter, PayoutRequest, DepositRequest) |
+| `src/circle/` | Circle adapter (mock) |
+| `src/moneygram/` | MoneyGram adapter (placeholder) |
 
-## 📦 Supported Adapters
-- **Circle:** Fully implemented mock adapter.
-- **MoneyGram:** Placeholder for future implementation.
+## Usage
 
-## 🚀 Usage
-Implemented as a library used by the `payment-api`. New adapters can be added by implementing the `IAnchorAdapter` interface in the `/src` directory.
+```ts
+import { CircleAdapter } from './src/circle';
+
+const adapter = new CircleAdapter({ apiKey: process.env.CIRCLE_API_KEY });
+const result = await adapter.initiatePayout({ amount: 100, currency: 'USD', destination: '...' });
+```
+
+## Adding a new adapter
+
+1. Create a new directory under `src/<provider>/`
+2. Implement the `AnchorAdapter` interface from `src/shared/`
+3. Register the adapter in the payment-api `AnchorModule`
+EOF
