@@ -1,45 +1,46 @@
-# Contributing to Global Micro-Remittance Bridge
+# Contributing to Global Remittance Bridge
 
-First off, thank you for considering contributing! It's people like you that make the open-source community such an amazing place to learn, inspire, and create.
+Thank you for your interest in contributing! This document provides guidelines and instructions for contributing.
 
-## 📜 Code of Conduct
+## Development Setup
 
-By participating in this project, you agree to abide by our [Code of Conduct](CODE_OF_CONDUCT.md).
+### Prerequisites
+- Node.js >= 18
+- PostgreSQL >= 14
+- Redis >= 7
+- Rust >= 1.70
+- Docker & Docker Compose
 
-## 🛠️ How to Contribute
+### Quick Start
+1. Fork and clone the repository
+2. Install dependencies: `npm install`
+3. Set up environment variables (see `.env.example` files)
+4. Run database migrations: `cd payment-api && npx prisma migrate dev`
+5. Start development servers: `npm run dev`
 
-### 1. Finding an Issue
-Check our [Issues](https://github.com/Timrossid/global-remittance-bridge/issues) page for open tasks or bugs. If you find something, feel free to open a new issue describing it.
+## How to Contribute
 
-### 2. Development Workflow
+### Reporting Bugs
+- Use the GitHub issue tracker
+- Include steps to reproduce
+- Include expected vs actual behavior
+- Include environment details
 
-1.  **Fork the repository** and create your branch from `master`.
-2.  **Install dependencies** in the relevant sub-project.
-3.  **Implement your changes.** Follow the existing code style and patterns.
-4.  **Run tests** to ensure your changes don't break anything.
-5.  **Commit your changes** with clear and concise messages.
-6.  **Push to your fork** and **submit a Pull Request**.
+### Suggesting Features
+- Open a GitHub issue with the `enhancement` label
+- Describe the feature and use case
+- Discuss with maintainers before starting work
 
-### 3. Pull Request Process
+### Pull Requests
+1. Create a feature branch from `master`
+2. Make your changes
+3. Ensure all tests pass: `npm test`
+4. Ensure linting passes: `npm run lint`
+5. Ensure TypeScript compiles: `npm run typecheck`
+6. Submit a pull request
 
-- Our maintainers will review your PR.
-- We may request changes or ask for clarification.
-- Once approved, your PR will be merged into the `master` branch.
-
-## 🧪 Testing
-
-Every contribution should include tests. Please ensure that:
-- New features have corresponding unit/integration tests.
-- Existing tests still pass.
-
-## 📝 Style Guide
-
-- Use **TypeScript** for all new code.
-- Follow the project's **ESLint** and **Prettier** configurations.
-- Maintain clear and meaningful documentation.
-
-## 💬 Communication
-
-If you have questions, please open an issue or join our community discussions.
-
-Happy coding! 🚀
+## Code Standards
+- Follow existing code style
+- Write tests for new functionality
+- Update documentation as needed
+- Keep commits atomic and well-described
