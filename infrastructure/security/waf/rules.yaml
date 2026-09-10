@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: waf-rules
+  namespace: remittance-bridge
+data:
+  waf-rules.conf: |
+    # Global Remittance Bridge WAF Rules
+    SecRuleEngine On
+    SecRequestBodyAccess On
+
+    # Common attack patterns
+    SecRule ARGS|ARGS_NAMES|REQUEST_HEADERS|XML:/(.*?)/ "(@rx<>\|%|&|;|\$|`|\|)" \
+      "id:1000,phase:2,t:none,t:lowercase,deny,status:403,msg:'Potential XSS or injection attack'"
+
+    # SQL injection patterns
+    SecRule ARGS|ARGS_NAMES "(@rx(\s|\')[uU][nN][iI][oO][nN](\s|\'))" \
+      "id:1001,phase:2,t:none,deny,status:403,msg:'SQL injection attempt'"
+
+    # Path traversal
+    SecRule REQUEST_URI "(@rx(\.\./|\.\.\\))" \
+      "id:1002,phase:1,t:none,deny,status:403,msg:'Path traversal attempt'"
+
+    # Block common scanners
+    SecRule REQUEST_HEADERS:User-Agent "(@rx(nikto|sqlmap|nessus|masscan|nmap))" \
+      "id:1003,phase:1,t:none,deny,status:403,msg:'Known scanner detected'"
