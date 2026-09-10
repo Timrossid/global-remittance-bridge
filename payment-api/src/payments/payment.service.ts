@@ -4,6 +4,7 @@ import { StellarService } from '../common/stellar.service';
 import { NotificationService } from '../notifications/notification.service';
 import { SorobanService } from '../common/soroban.service';
 import { retryWithBackoff } from '../common/utils/retry.util';
+import { AuditLogService } from '../common/services/audit-log.service';
 
 @Injectable()
 export class PaymentService {
@@ -12,6 +13,7 @@ export class PaymentService {
     private stellarService: StellarService,
     private notificationService: NotificationService,
     private sorobanService: SorobanService,
+    private auditLogService: AuditLogService,
   ) {}
 
   /**
@@ -242,6 +244,12 @@ export class PaymentService {
       data: { status: status as any },
     });
 
+    await this.auditLogService.log({
+      action: 'transaction.status_updated',
+      userId: tx.merchantId,
+      details: { transactionId: id, previousStatus: tx.status, newStatus: status },
+    });
+
     if (status === 'COMPLETED') {
       const merchant = await this.prisma.merchant.findUnique({ where: { id: tx.merchantId } });
       if (merchant && process.env.WEBHOOK_BASE_URL) {
@@ -255,11 +263,36 @@ export class PaymentService {
     return tx;
   }
 
-  async getMerchantTransactions(merchantId: string) {
-    return this.prisma.transaction.findMany({
-      where: { merchantId },
+  async getMerchantTransactions(merchantId: string, page = 1, limit = 20) {
+    const where = { merchantId };
+    const transactions = await this.prisma.transaction.findMany({
+      where,
       orderBy: { createdAt: 'desc' },
-      take: 100, // Cap at 100 for performance
+      skip: (page - 1) * limit,
+      take: limit,
+      select: {
+        id: true,
+        amount: true,
+        currency: true,
+        status: true,
+        stellarTxHash: true,
+        senderId: true,
+        receiverId: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
+
+    const total = await this.prisma.transaction.count({ where });
+
+    return {
+      data: transactions,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 }
