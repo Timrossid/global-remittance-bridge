@@ -28,5 +28,8 @@ describe('PaymentService.createPayment', () => {
     prisma.transaction.create.mockResolvedValue({ id: 'tx-1', status: 'PENDING' });
     const result = await service.createPayment({ amount: 50, currency: 'USDC', merchantId: 'm1', customerId: 'c1' });
     expect(result.status).toBe('PENDING');
+    expect(prisma.transaction.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ status: 'PENDING', amount: 50, currency: 'USDC' }),
+    });
   });
 });
