@@ -2,23 +2,24 @@ import { isThrottled, resetThrottle } from '../../src/common/throttle/notificati
 
 describe('notification throttle', () => {
   beforeEach(() => {
-    for (const key of ['user-1', 'user-2']) resetThrottle(key);
+    resetThrottle('k1');
+    resetThrottle('k2');
   });
 
   it('allows first send', () => {
-    expect(isThrottled('user-1', 60000, 3)).toBe(false);
+    expect(isThrottled('k1', 60000, 3)).toBe(false);
   });
 
   it('blocks after exceeding maxPerWindow', () => {
-    expect(isThrottled('user-1', 60000, 2)).toBe(false);
-    expect(isThrottled('user-1', 60000, 2)).toBe(false);
-    expect(isThrottled('user-1', 60000, 2)).toBe(true);
+    expect(isThrottled('k1', 60000, 2)).toBe(false);
+    expect(isThrottled('k1', 60000, 2)).toBe(false);
+    expect(isThrottled('k1', 60000, 2)).toBe(true);
   });
 
   it('resets after window expires', async () => {
-    expect(isThrottled('user-2', 50, 1)).toBe(false);
-    expect(isThrottled('user-2', 50, 1)).toBe(true);
+    expect(isThrottled('k2', 50, 1)).toBe(false);
+    expect(isThrottled('k2', 50, 1)).toBe(true);
     await new Promise((r) => setTimeout(r, 60));
-    expect(isThrottled('user-2', 50, 1)).toBe(false);
+    expect(isThrottled('k2', 50, 1)).toBe(false);
   });
 });
