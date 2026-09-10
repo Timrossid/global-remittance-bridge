@@ -3,13 +3,8 @@ import { validateEnv } from '../../src/common/validation/env.validation';
 describe('env validation', () => {
   const originalEnv = process.env;
 
-  beforeEach(() => {
-    process.env = { ...originalEnv };
-  });
-
-  afterEach(() => {
-    process.env = originalEnv;
-  });
+  beforeEach(() => { process.env = { ...originalEnv }; });
+  afterEach(() => { process.env = originalEnv; });
 
   it('throws when JWT_SECRET is missing', () => {
     process.env.DATABASE_URL = 'postgresql://localhost/db';
