@@ -1,79 +1,45 @@
-# ⚙️ Payment API
+# Payment API
 
-The core backend orchestration layer for the Global Micro-Remittance Bridge. Built with NestJS, Prisma, and PostgreSQL.
+NestJS backend for the Global Micro-Remittance Bridge. Orchestrates Stellar
+payments, Soroban escrow interactions, merchant management, and notifications.
 
-## 🏗️ Architecture
+## Prerequisites
 
-The Payment API serves as the central brain of the ecosystem, coordinating between:
-- **Merchants:** Managing onboarding, KYC, and wallet addresses.
-- **Customers:** Processing payment initiations.
-- **Stellar Network:** Interfacing with the blockchain for fund transfers and contract interactions.
-- **Anchor Adapters:** Routing payments through various fiat on/off ramps.
-- **Transaction Indexer:** Receiving updates from the indexer to reconcile on-chain state.
+- Node.js >= 18
+- PostgreSQL >= 14
+- Redis >= 6 (for BullMQ webhook queue)
+- Stellar testnet or mainnet account with funded secret
 
-## 🚀 Features
-
-- **Merchant Onboarding:** API for SME registration and KYC management.
-- **Payment Orchestration:** Manages the lifecycle of payments from initiation to settlement.
-- **Stellar/Soroban Integration:** Direct communication with the Stellar network for fund transfers and smart contract calls.
-- **Anchor Management:** Dynamic routing to the best fiat on/off ramps.
-- **Notification System:** Automated alerts via Email, SMS, and Webhooks.
-
-## 🛠️ Tech Stack
-
-- **Framework:** NestJS
-- **ORM:** Prisma (PostgreSQL)
-- **Blockchain:** `@stellar/stellar-sdk` & `soroban-client`
-- **Cache/Queue:** Redis, BullMQ
-- **Auth:** JWT / Passport
-
-## 🚦 Getting Started
-
-### Installation
+## Setup
 
 ```bash
-npm install
+cp .env.example .env
+npm ci
+npx prisma migrate deploy
+npx prisma generate
+npm run build
+npm run start:prod
 ```
 
-### Environment Setup
+## Scripts
 
-Copy `.env.example` to `.env` and fill in:
-- `DATABASE_URL`: PostgreSQL connection string (Transaction mode for app, Session mode for migrations).
-- `DIRECT_URL`: PostgreSQL connection string (Session mode).
-- `JWT_SECRET`: Secret for signing JWT tokens.
-- `STELLAR_SECRET`: Secret key for the bridge administrative account.
-- `SOROBAN_RPC_URL`: URL of the Soroban RPC server (e.g., Testnet).
-- `ESCROW_CONTRACT_ID`: The deployed address of the Escrow contract.
-- `REDIS_URL`: Redis connection string for BullMQ.
+| Command | Purpose |
+|---------|---------|
+| `npm run dev` | Start with hot-reload |
+| `npm run build` | Prisma generate + Nest build |
+| `npm run test` | Jest unit tests |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | TypeScript strict check |
 
-### Running the App
+## Architecture
 
-**Development:**
-```bash
-npm run start:dev
-```
+- **Auth**: JWT + refresh tokens via passport-jwt
+- **Payments**: Direct Stellar transfers and Soroban escrow via RPC simulate+send
+- **Notifications**: SendGrid/Twilio/SMTP with fallback logging
+- **Webhooks**: BullMQ queue with 5x exponential backoff retry
 
-**Production (Docker):**
-```bash
-docker build -t payment-api .
-docker run -p 3000:3000 --env-file .env payment-api
-```
+## Environment
 
-## 🛣️ API Endpoints
+Required: `DATABASE_URL`, `JWT_SECRET`, `STELLAR_NETWORK`, `SOROBAN_RPC_URL`, `SOROBAN_CONTRACT_ID`, `STELLAR_SECRET`.
 
-### Merchants
-- `POST /merchants/onboard` - Register a new SME.
-- `GET /merchants/me` - Get authenticated merchant profile.
-- `GET /merchants/me/stats` - Get dashboard statistics (volume, customers, etc.).
-- `PUT /merchants/:id/kyc` - Update KYC status.
-
-### Payments
-- `POST /payments/create` - Initiate a new remittance transaction.
-- `POST /payments/transfer` - Trigger an immediate Stellar transfer.
-- `POST /payments/escrow` - Create a secure escrow on the Soroban blockchain.
-- `GET /payments/:id` - Retrieve transaction details.
-- `GET /merchants/:id/transactions` - List all transactions for a merchant.
-
-### Anchors & Settlements
-- `GET /anchors/quote` - Get the best FX rate from available anchors.
-- `POST /settlements/process` - Trigger a settlement batch for a merchant.
+Optional: `REDIS_URL`, `CORS_ORIGIN`, `SENDGRID_API_KEY`, `TWILIO_*`, `SMTP_*`, `WEBHOOK_BASE_URL`.
