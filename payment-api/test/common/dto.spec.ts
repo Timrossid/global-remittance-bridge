@@ -1,6 +1,7 @@
 import { IsString, IsNotEmpty, IsUUID, IsNumber, Min, IsOptional } from 'class-validator';
 import { plainToClass } from 'class-transformer';
-import { CreatePaymentDto, CreateEscrowPaymentDto, UpdateTransactionStatusDto, MerchantQueryDto } from '../../src/common/dto';
+import { validate } from 'class-validator';
+import { CreatePaymentDto, CreateEscrowPaymentDto } from '../../src/common/dto';
 
 describe('DTOs', () => {
   it('CreatePaymentDto accepts valid input', async () => {
@@ -21,5 +22,3 @@ describe('DTOs', () => {
     expect(errors.some((e) => e.property === 'amount')).toBe(true);
   });
 });
-
-import { validate } from 'class-validator';
