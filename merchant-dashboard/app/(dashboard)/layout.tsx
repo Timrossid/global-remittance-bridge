@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { signOut, isAuthenticated } from '@/lib/api';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 const navLinks = [
   {
@@ -146,12 +147,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
             <p className="text-sm font-medium text-gray-700 truncate">{merchantName}</p>
           </div>
-          <button
-            onClick={signOut}
-            className="w-full text-left text-sm text-gray-500 hover:text-red-600 transition-colors px-1"
-          >
-            Sign out
-          </button>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <button
+              onClick={signOut}
+              className="flex-1 text-left text-sm text-gray-500 hover:text-red-600 transition-colors px-1"
+            >
+              Sign out
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -177,9 +181,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </svg>
           </button>
           <span className="font-semibold text-sm">Remittance Bridge</span>
+          <div className="ml-auto">
+            <ThemeToggle />
+          </div>
         </header>
 
-        <main className="flex-1 overflow-auto">{children}</main>
+        <main id="main-content" className="flex-1 overflow-auto">{children}</main>
       </div>
     </div>
   );
