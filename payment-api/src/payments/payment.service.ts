@@ -3,10 +3,8 @@ import { PrismaService } from '../common/prisma.service';
 import { StellarService } from '../common/stellar.service';
 import { NotificationService } from '../notifications/notification.service';
 import { SorobanService } from '../common/soroban.service';
+import { retryWithBackoff } from '../common/utils/retry.util';
 
-/**
- * PaymentService orchestrates Stellar payments and Soroban escrow interactions.
- */
 @Injectable()
 export class PaymentService {
   constructor(
@@ -175,32 +173,44 @@ export class PaymentService {
     txBuilder.addOperation(operation);
     const tx = txBuilder.build();
 
-    // Simulate first to get footprint and updated fee
-    const simResult = await this.sorobanService.callRPC(rpcUrl, 'simulateTransaction', {
-      transaction: tx.toXDR(),
-    }) as any;
+    // Simulate with retry (Soroban RPC can be transiently unavailable)
+    const simResult = await retryWithBackoff(
+      () => this.sorobanService.callRPC(rpcUrl, 'simulateTransaction', {
+        transaction: tx.toXDR(),
+      }) as Promise<any>,
+      { retries: 3, baseDelay: 1000 },
+    );
 
     if (simResult?.error) {
       throw new InternalServerErrorException(`Soroban simulation failed: ${simResult.error}`);
     }
 
-    // Assemble transaction with simulation results (adds soroban data/auth entries)
     const assembledTx = StellarSdk.rpc.assembleTransaction(tx, simResult).build();
     assembledTx.sign(sourceKeypair);
     const xdr = assembledTx.toXDR();
 
-    const sendResult = await this.sorobanService.submitTransaction(rpcUrl, xdr);
+    const sendResult = await retryWithBackoff(
+      () => this.sorobanService.submitTransaction(rpcUrl, xdr) as Promise<any>,
+      { retries: 3, baseDelay: 1000 },
+    );
 
     // Wait for confirmation
-    const confirmation = await this.sorobanService.getTransactionStatus(rpcUrl, sendResult.hash);
+    const confirmation = await retryWithBackoff(
+      () => this.sorobanService.getTransactionStatus(rpcUrl, sendResult.hash) as Promise<any>,
+      { retries: 5, baseDelay: 2000 },
+    );
+
+    const resolvedCurrency = tokenAddress.length === 56 && !tokenAddress.startsWith('C')
+      ? 'XLM'
+      : tokenAddress.slice(0, 12);
 
     // Store in DB
     const dbTx = await this.prisma.transaction.create({
       data: {
         amount,
-        currency: 'USDC',
+        currency: resolvedCurrency,
         merchantId,
-        customerId: senderAddress, // Use wallet address as customer reference
+        customerId: senderAddress,
         senderId: senderAddress,
         receiverId: merchant.walletAddress,
         status: confirmation.status === 'SUCCESS' ? 'COMPLETED' : 'PENDING',
