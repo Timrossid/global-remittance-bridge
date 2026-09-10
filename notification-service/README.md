@@ -1,17 +1,27 @@
-# 🔔 Notification Service
+# Notification Service
 
-Handles omni-channel communication for customers and merchants.
+Omni-channel communication layer for the Global Micro-Remittance Bridge.
 
-## 🚀 Capabilities
-- **Emails:** Transaction confirmations and onboarding alerts.
-- **SMS:** Instant notifications to merchants when funds arrive.
-- **Webhooks:** Real-time event pushes to merchant-owned systems.
+## Supported Channels
 
-## 🛠️ Implementation
-The service is currently integrated into the `payment-api` as a module, allowing the payment flow to trigger notifications automatically.
+| Channel | Transport | Environment Variable |
+|---------|-----------|---------------------|
+| Email | SendGrid API | `SENDGRID_API_KEY` |
+| Email | SMTP | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` |
+| SMS | Twilio | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` |
+| Webhook | HTTP POST | `WEBHOOK_BASE_URL` (server-side) |
 
-## ⚙️ Configuration
-Supports multiple providers:
-- **Email:** SendGrid / AWS SES
-- **SMS:** Twilio
-- **Webhooks:** Custom HTTP endpoints
+## Usage
+
+The NotificationService is provided as a NestJS injectable. It automatically
+selects the first available transport for each channel:
+
+```ts
+await notificationService.sendEmail('user@example.com', 'Subject', { html: '<p>...</p>' });
+await notificationService.sendSms('+1234567890', 'Your payment was received.');
+await notificationService.sendWebhook('https://example.com/hook', { event: 'payment.completed' });
+```
+
+When no transport is configured, the service logs the message and returns
+`{ success: false }`. Ensure at least one email or SMS transport is set in
+production.
