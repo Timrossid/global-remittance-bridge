@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { HttpExceptionFilter } from '../../src/common/filters/http-exception.filter';
-import { HttpException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
-import { ArgumentsHost, UnauthorizedException } from '@nestjs/common';
+import { ArgumentsHost } from '@nestjs/common';
 
 describe('HttpExceptionFilter', () => {
   let filter: HttpExceptionFilter;
@@ -15,7 +14,7 @@ describe('HttpExceptionFilter', () => {
 
   it('formats HttpException with status code and message', () => {
     const host = { switchToHttp: () => ({ getResponse: () => mockResponse, getRequest: () => mockRequest }) } as ArgumentsHost;
-    const result = (filter as any).catch(new NotFoundException('Not found'), host);
+    const result = (filter as any).catch(new (await import('@nestjs/common')).NotFoundException('Not found'), host);
     expect(result).toEqual(expect.objectContaining({ statusCode: 404, message: 'Not found' }));
   });
 
