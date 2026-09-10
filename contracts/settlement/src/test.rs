@@ -122,3 +122,107 @@ fn add_admin_extends_authorized_callers() {
     assert_eq!(balances.balance(&merchant), 9_950);
     assert_eq!(balances.balance(&treasury), 50);
 }
+
+#[test]
+fn pause_blocks_settlements_and_unpause_resumes() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let sender = Address::generate(&env);
+    let merchant = Address::generate(&env);
+    let treasury = Address::generate(&env);
+    let admin = Address::generate(&env);
+    let token_admin = Address::generate(&env);
+    let token = setup_token(&env, &token_admin);
+    let contract_id = env.register(SettlementContract, ());
+    let settlement = SettlementContractClient::new(&env, &contract_id);
+    settlement.initialize(&admin);
+    settlement.pause(&admin);
+    assert!(std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        settlement.process_settlement(&sender, &merchant, &treasury, &token, &1_000);
+    }))
+    .is_err());
+    settlement.unpause(&admin);
+    StellarAssetClient::new(&env, &token).mint(&sender, &1_000);
+    settlement.process_settlement(&sender, &merchant, &treasury, &token, &1_000);
+    let balances = TokenClient::new(&env, &token);
+    assert_eq!(balances.balance(&merchant), 950);
+}
+
+#[test]
+fn batch_settle_processes_multiple_merchants() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let sender = Address::generate(&env);
+    let merchant1 = Address::generate(&env);
+    let merchant2 = Address::generate(&env);
+    let treasury = Address::generate(&env);
+    let admin = Address::generate(&env);
+    let token_admin = Address::generate(&env);
+    let token = setup_token(&env, &token_admin);
+    let contract_id = env.register(SettlementContract, ());
+    let settlement = SettlementContractClient::new(&env, &contract_id);
+    settlement.initialize(&admin);
+    StellarAssetClient::new(&env, &token).mint(&sender, &20_000);
+    let merchants = Vec::from_array(&env, &[merchant1.clone(), merchant2.clone()]);
+    let amounts = Vec::from_array(&env, &[10_000i128, 5_000i128]);
+    settlement.batch_settle(&sender, &merchants, &treasury, &token, &amounts);
+    let balances = TokenClient::new(&env, &token);
+    assert_eq!(balances.balance(&merchant1), 9_950);
+    assert_eq!(balances.balance(&merchant2), 4_975);
+    assert_eq!(balances.balance(&treasury), 75);
+}
+
+#[test]
+fn distribute_fees_rejects_non_positive_amounts() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let admin = Address::generate(&env);
+    let treasury = Address::generate(&env);
+    let token_admin = Address::generate(&env);
+    let token = setup_token(&env, &token_admin);
+    let contract_id = env.register(SettlementContract, ());
+    let settlement = SettlementContractClient::new(&env, &contract_id);
+    settlement.initialize(&admin);
+    assert!(std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        settlement.distribute_fees(&admin, &treasury, &token, &0);
+    }))
+    .is_err());
+}
+
+#[test]
+fn process_settlement_rejects_amounts_outside_bounds() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let sender = Address::generate(&env);
+    let merchant = Address::generate(&env);
+    let treasury = Address::generate(&env);
+    let admin = Address::generate(&env);
+    let token_admin = Address::generate(&env);
+    let token = setup_token(&env, &token_admin);
+    let contract_id = env.register(SettlementContract, ());
+    let settlement = SettlementContractClient::new(&env, &contract_id);
+    settlement.initialize(&admin);
+    StellarAssetClient::new(&env, &token).mint(&sender, &10_000);
+    assert!(std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        settlement.process_settlement(&sender, &merchant, &treasury, &token, &0);
+    }))
+    .is_err());
+    assert!(std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        settlement.process_settlement(&sender, &merchant, &treasury, &token, &2_000_000_000_001);
+    }))
+    .is_err());
+}
+
+#[test]
+fn contract_name_and_description_expose_metadata() {
+    let env = Env::default();
+    let admin = Address::generate(&env);
+    let contract_id = env.register(SettlementContract, ());
+    let settlement = SettlementContractClient::new(&env, &contract_id);
+    settlement.initialize(&admin);
+    assert_eq!(settlement.contract_name(), Symbol::short("SettlementContract"));
+    assert_eq!(
+        settlement.contract_description(),
+        Symbol::short("Settlement and fee distribution for remittances")
+    );
+}
