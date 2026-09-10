@@ -1,10 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../common/prisma.service';
 import { Prisma } from '@prisma/client';
+import { PaginationService } from '../common/services/pagination.service';
 
 @Injectable()
 export class MerchantService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private paginationService: PaginationService) {}
 
   async createMerchant(data: Prisma.MerchantCreateInput) {
     return this.prisma.merchant.create({ data });
@@ -45,11 +46,10 @@ export class MerchantService {
     };
   }
 
-  async getTransactions(merchantId: string) {
-    return this.prisma.transaction.findMany({
+  async getTransactions(merchantId: string, page = 1, limit = 20) {
+    const transactions = await this.prisma.transaction.findMany({
       where: { merchantId },
       orderBy: { createdAt: 'desc' },
-      take: 100,
       select: {
         id: true,
         amount: true,
@@ -62,6 +62,8 @@ export class MerchantService {
         updatedAt: true,
       },
     });
+
+    return this.paginationService.paginate(transactions, { page, limit, maxLimit: 100 });
   }
 
   async getAnalytics(merchantId: string) {
