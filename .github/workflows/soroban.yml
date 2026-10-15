@@ -90,7 +90,7 @@ jobs:
         run: stellar contract build
 
       - name: Upload contract artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: soroban-contract-wasm
           path: contracts/target/wasm32v1-none/release/*.wasm
@@ -304,7 +304,7 @@ jobs:
           cat testnet-deployment-manifest.txt
 
       - name: Upload Testnet deployment preparation
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: soroban-testnet-deployment-preparation
           path: |
